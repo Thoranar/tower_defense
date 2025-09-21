@@ -1,0 +1,39 @@
+{
+  "name": "tower-defense",
+  "version": "1.0.0",
+  "description": "A 2D web-based progressive defense game",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npm run clean && npm run compile && npm run copy-assets",
+    "compile": "tsc",
+    "copy-assets": "cp index.html dist/ && cp -r public dist/",
+    "clean": "rm -rf dist",
+    "dev": "npm run build && npx http-server dist -p 3000 -c-1",
+    "serve": "npx http-server dist -p 3000",
+    "watch": "tsc --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Thoranar/tower_defense.git"
+  },
+  "keywords": [
+    "game",
+    "tower-defense",
+    "typescript",
+    "canvas",
+    "web-game"
+  ],
+  "author": "Claude Code Assistant",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Thoranar/tower_defense/issues"
+  },
+  "homepage": "https://thoranar.github.io/tower_defense/",
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {
+    "json5": "^2.2.3"
+  }
+}
