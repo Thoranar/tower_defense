@@ -8,7 +8,8 @@ export type ToggleKey =
   | 'projectileDebug'
   | 'behaviorTrails'
   | 'collisionMarkers'
-  | 'hitLogs';
+  | 'hitLogs'
+  | 'invincibleTower';
 
 export type SliderKey =
   | 'fireRateMult'

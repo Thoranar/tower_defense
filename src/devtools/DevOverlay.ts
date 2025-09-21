@@ -3,6 +3,8 @@ import { UIRenderer } from '../ui/UIRenderer.js';
 import { Input } from '../core/Input.js';
 import { Tower } from '../gameplay/Tower.js';
 import { Projectile } from '../gameplay/Projectile.js';
+import { CollisionPair } from '../systems/CollisionSystem.js';
+import { DamageEvent } from '../systems/CombatSystem.js';
 
 // Developer overlay panel UI
 // Renders and manages the in-game developer tools interface
@@ -67,7 +69,8 @@ export class DevOverlay {
       { key: 'projectileDebug', label: 'Projectile Debug', shortcut: '' },
       { key: 'behaviorTrails', label: 'Behavior Trails', shortcut: '' },
       { key: 'collisionMarkers', label: 'Collision Markers', shortcut: '' },
-      { key: 'hitLogs', label: 'Hit Logs', shortcut: '' }
+      { key: 'hitLogs', label: 'Hit Logs', shortcut: '' },
+      { key: 'invincibleTower', label: 'Invincible Tower', shortcut: '' }
     ];
 
     for (const toggle of toggleEntries) {
@@ -263,5 +266,85 @@ export class DevOverlay {
     this.uiRenderer.drawText(`Projectiles: ${counts.projectiles}`, x, y, '#ff6', '12px monospace');
     y += 16;
     this.uiRenderer.drawText(`Total: ${counts.total}`, x, y, '#6f6', '12px monospace');
+  }
+
+  /** Render collision markers for Milestone 5 */
+  renderCollisionMarkers(collisionPairs: CollisionPair[]): void {
+    if (!this.devTools.isOn('collisionMarkers')) return;
+
+    for (const collision of collisionPairs) {
+      const x = (collision.entityA.pos.x + collision.entityB.pos.x) / 2;
+      const y = (collision.entityA.pos.y + collision.entityB.pos.y) / 2;
+
+      // Different colors for different collision types
+      let color = '#fff';
+      let size = 8;
+
+      switch (collision.type) {
+        case 'projectile-enemy':
+          color = '#ff0'; // Yellow for projectile hits
+          size = 6;
+          break;
+        case 'enemy-ground':
+          color = '#f00'; // Red for ground collisions
+          size = 10;
+          break;
+        case 'enemy-tower':
+          color = '#f80'; // Orange for tower collisions
+          size = 12;
+          break;
+      }
+
+      // Draw collision marker as a flashing circle
+      const time = Date.now() / 100;
+      const alpha = 0.5 + 0.5 * Math.sin(time);
+
+      this.uiRenderer.drawRect(x - size/2, y - size/2, size, size, color);
+      this.uiRenderer.drawStrokeRect(x - size/2, y - size/2, size, size, '#fff', 1);
+    }
+  }
+
+  /** Render hit logs for collision debugging */
+  renderHitLogs(damageEvents: DamageEvent[]): void {
+    if (!this.devTools.isOn('hitLogs')) return;
+
+    // Position at top-left under FPS counter
+    const x = 10;
+    let y = 60;
+    const maxLogs = 10;
+    const maxAge = 5000; // 5 seconds
+    const now = Date.now();
+
+    // Filter recent events and take the most recent
+    const recentEvents = damageEvents
+      .filter(event => (now - event.timestamp) < maxAge)
+      .slice(-maxLogs)
+      .reverse();
+
+    if (recentEvents.length === 0) return;
+
+    this.uiRenderer.drawText('Hit Logs:', x, y, '#ccc', '12px monospace');
+    y += 16;
+
+    for (const event of recentEvents) {
+      const age = now - event.timestamp;
+      const alpha = 1 - (age / maxAge);
+
+      // Determine log color based on target type
+      let color = '#fff';
+      let targetType = 'Unknown';
+
+      if (event.target.constructor.name === 'Enemy') {
+        color = '#f66';
+        targetType = 'Enemy';
+      } else if (event.target.constructor.name === 'Tower') {
+        color = '#66f';
+        targetType = 'Tower';
+      }
+
+      const logText = `${targetType} -${event.amount} HP`;
+      this.uiRenderer.drawText(logText, x, y, color, '10px monospace');
+      y += 12;
+    }
   }
 }

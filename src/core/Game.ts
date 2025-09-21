@@ -13,6 +13,9 @@ import { Enemy } from '../gameplay/Enemy.js';
 import { loadRegistry, Registry } from '../data/registry.js';
 import { SpawnSystem } from '../systems/SpawnSystem.js';
 import { MovementSystem } from '../systems/MovementSystem.js';
+import { CollisionSystem } from '../systems/CollisionSystem.js';
+import { CombatSystem } from '../systems/CombatSystem.js';
+import { EventBus } from './EventBus.js';
 
 // Main game loop; orchestrates systems and updates world
 // Manages rendering, input, and coordinates all game systems
@@ -33,10 +36,13 @@ export class Game {
   private running: boolean = false;
   private animationId: number = 0;
   private inRun: boolean = false;
+  private bus: EventBus;
 
   // Game systems
   private spawnSystem: SpawnSystem | null = null;
   private movementSystem: MovementSystem | null = null;
+  private collisionSystem: CollisionSystem | null = null;
+  private combatSystem: CombatSystem | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -54,6 +60,7 @@ export class Game {
     this.input = new Input(canvas);
     this.world = new World();
     this.hud = new Hud();
+    this.bus = new EventBus();
   }
 
   async init(): Promise<void> {
@@ -124,6 +131,16 @@ export class Game {
     this.movementSystem = new MovementSystem({
       world: this.world,
       reg: this.registry
+    });
+
+    this.collisionSystem = new CollisionSystem({
+      world: this.world,
+      bus: this.bus
+    });
+
+    this.combatSystem = new CombatSystem({
+      world: this.world,
+      bus: this.bus
     });
   }
 
@@ -207,6 +224,16 @@ export class Game {
         this.movementSystem.update(deltaTime);
       }
 
+      if (this.collisionSystem) {
+        this.collisionSystem.update(deltaTime);
+      }
+
+      if (this.combatSystem) {
+        this.combatSystem.clearOldDamageEvents();
+        // Sync invincible tower dev tool state
+        this.combatSystem.setTowerInvincible(this.devTools.isOn('invincibleTower'));
+      }
+
       // Update all entities
       for (const entity of this.world.all()) {
         if (entity.update) {
@@ -246,6 +273,26 @@ export class Game {
           this.uiRenderer.drawEnemy(entity);
         }
       }
+
+      // Render floating damage numbers
+      if (this.combatSystem) {
+        const damageEvents = this.combatSystem.getDamageEvents();
+        const now = Date.now();
+        const maxAge = 3000; // 3 seconds
+
+        for (const event of damageEvents) {
+          const age = now - event.timestamp;
+          if (age < maxAge) {
+            this.uiRenderer.drawFloatingDamage(
+              event.position.x,
+              event.position.y,
+              event.amount,
+              age,
+              maxAge
+            );
+          }
+        }
+      }
     }
 
     // Show FPS if enabled in DevTools
@@ -256,6 +303,12 @@ export class Game {
     // Render debug overlays and info (delegated to DevOverlay)
     this.devOverlay.renderDebugOverlays();
     this.devOverlay.renderInputDebug(this.input, this.getTower());
+
+    // Render collision markers and hit logs if in run
+    if (this.inRun && this.collisionSystem && this.combatSystem) {
+      this.devOverlay.renderCollisionMarkers(this.collisionSystem.getCollisionPairs());
+      this.devOverlay.renderHitLogs(this.combatSystem.getDamageEvents());
+    }
 
     // Render projectile debug info if enabled
     if (this.inRun) {

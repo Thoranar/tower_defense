@@ -25,6 +25,7 @@ export class DevToolsSystem {
     this.toggles.behaviorTrails = false;
     this.toggles.collisionMarkers = false;
     this.toggles.hitLogs = false;
+    this.toggles.invincibleTower = false;
 
     // Default slider values
     this.sliders.fireRateMult = 1.0;

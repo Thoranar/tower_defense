@@ -171,4 +171,30 @@ export class UIRenderer {
     this.ctx.fillStyle = hpPercent > 0.5 ? '#0f0' : hpPercent > 0.25 ? '#ff0' : '#f00';
     this.ctx.fillRect(barX, barY, barWidth * hpPercent, barHeight);
   }
+
+  drawFloatingDamage(x: number, y: number, damage: number, age: number, maxAge: number): void {
+    const progress = age / maxAge;
+    const alpha = 1 - progress;
+    const offsetY = progress * 30; // Float upward
+
+    // Color based on damage amount
+    let color = '#ffff00'; // Yellow for normal damage
+    if (damage >= 20) color = '#ff4444'; // Red for high damage
+    else if (damage >= 10) color = '#ff8844'; // Orange for medium damage
+
+    this.ctx.save();
+    this.ctx.globalAlpha = alpha;
+    this.ctx.fillStyle = color;
+    this.ctx.font = 'bold 14px monospace';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+
+    // Add text outline for better visibility
+    this.ctx.strokeStyle = '#000';
+    this.ctx.lineWidth = 2;
+    this.ctx.strokeText(`-${damage}`, x, y - offsetY);
+    this.ctx.fillText(`-${damage}`, x, y - offsetY);
+
+    this.ctx.restore();
+  }
 }
