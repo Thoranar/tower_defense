@@ -2,5 +2,44 @@
 // Contains all enemy types, their health, speed, XP rewards, and behaviors
 // Data-driven enemy configuration for flexible content authoring
 {
-  // TODO: Define enemy blueprints and behavior patterns
+  "basic": {
+    "hp": 3,
+    "maxHp": 3,
+    "speed": 60,
+    "xp": 1,
+    "radius": 12,
+    "behaviors": ["MoveDown"],
+    "sprite": "enemy_basic",
+    "color": "#FF6B6B"
+  },
+  "fast": {
+    "hp": 2,
+    "maxHp": 2,
+    "speed": 90,
+    "xp": 2,
+    "radius": 10,
+    "behaviors": ["MoveDown"],
+    "sprite": "enemy_fast",
+    "color": "#4ECDC4"
+  },
+  "heavy": {
+    "hp": 8,
+    "maxHp": 8,
+    "speed": 30,
+    "xp": 3,
+    "radius": 16,
+    "behaviors": ["MoveDown"],
+    "sprite": "enemy_heavy",
+    "color": "#45B7D1"
+  },
+  "scout": {
+    "hp": 1,
+    "maxHp": 1,
+    "speed": 120,
+    "xp": 1,
+    "radius": 8,
+    "behaviors": ["MoveDown"],
+    "sprite": "enemy_scout",
+    "color": "#FFA07A"
+  }
 }

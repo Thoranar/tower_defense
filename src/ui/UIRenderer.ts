@@ -139,4 +139,36 @@ export class UIRenderer {
     this.ctx.lineWidth = 1;
     this.ctx.stroke();
   }
+
+  drawEnemy(enemy: any): void {
+    const x = enemy.pos.x;
+    const y = enemy.pos.y;
+    const radius = enemy.radius;
+
+    // Draw enemy as a colored circle
+    this.ctx.fillStyle = enemy.color || '#FF6B6B';
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Draw outline
+    this.ctx.strokeStyle = '#333';
+    this.ctx.lineWidth = 1;
+    this.ctx.stroke();
+
+    // Draw HP bar above enemy
+    const barWidth = radius * 2;
+    const barHeight = 4;
+    const barX = x - barWidth / 2;
+    const barY = y - radius - 8;
+    const hpPercent = enemy.hp / enemy.maxHp;
+
+    // Background
+    this.ctx.fillStyle = '#333';
+    this.ctx.fillRect(barX, barY, barWidth, barHeight);
+
+    // Health fill
+    this.ctx.fillStyle = hpPercent > 0.5 ? '#0f0' : hpPercent > 0.25 ? '#ff0' : '#f00';
+    this.ctx.fillRect(barX, barY, barWidth * hpPercent, barHeight);
+  }
 }

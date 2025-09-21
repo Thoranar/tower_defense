@@ -7,6 +7,16 @@ import { Projectile } from '../gameplay/Projectile.js';
 // Developer overlay panel UI
 // Renders and manages the in-game developer tools interface
 // Handles developer tool interactions and visual presentation
+
+type ClickableArea = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  type: 'toggle' | 'action';
+  key: string;
+};
+
 export class DevOverlay {
   private devTools: DevToolsSystem;
   private uiRenderer: UIRenderer;
@@ -14,6 +24,7 @@ export class DevOverlay {
   private height: number;
   private panelWidth: number = 280;
   private panelHeight: number = 400;
+  private clickableAreas: ClickableArea[] = [];
 
   constructor(devTools: DevToolsSystem, uiRenderer: UIRenderer, width: number, height: number) {
     this.devTools = devTools;
@@ -29,6 +40,9 @@ export class DevOverlay {
   render(): void {
     if (!this.devTools.isVisible()) return;
 
+    // Clear clickable areas for this frame
+    this.clickableAreas = [];
+
     const panelX = this.width - this.panelWidth - 10;
     const panelY = 10;
 
@@ -42,7 +56,7 @@ export class DevOverlay {
     let yOffset = panelY + 40;
 
     // Render toggles section
-    this.uiRenderer.drawText('Toggles:', panelX + 10, yOffset, '#ccc', '12px monospace');
+    this.uiRenderer.drawText('Toggles (click to toggle):', panelX + 10, yOffset, '#ccc', '12px monospace');
     yOffset += 20;
 
     const toggles = this.devTools.getToggles();
@@ -60,6 +74,22 @@ export class DevOverlay {
       const isOn = toggles[toggle.key as keyof typeof toggles] ?? false;
       const color = isOn ? '#0f0' : '#666';
       const status = isOn ? '[ON]' : '[OFF]';
+
+      // Add clickable area
+      const clickableWidth = this.panelWidth - 30;
+      const clickableHeight = 14;
+      this.clickableAreas.push({
+        x: panelX + 15,
+        y: yOffset - 2,
+        width: clickableWidth,
+        height: clickableHeight,
+        type: 'toggle',
+        key: toggle.key
+      });
+
+      // Draw hover background for better UX
+      this.uiRenderer.drawRect(panelX + 15, yOffset - 2, clickableWidth, clickableHeight, 'rgba(255, 255, 255, 0.05)');
+
       this.uiRenderer.drawText(`${status} ${toggle.label}`, panelX + 15, yOffset, color, '11px monospace');
       yOffset += 16;
     }
@@ -67,15 +97,31 @@ export class DevOverlay {
     yOffset += 10;
 
     // Actions section
-    this.uiRenderer.drawText('Actions:', panelX + 10, yOffset, '#ccc', '12px monospace');
+    this.uiRenderer.drawText('Actions (click to execute):', panelX + 10, yOffset, '#ccc', '12px monospace');
     yOffset += 20;
 
     const actions = [
       { key: 'resetRun', label: '[R] Reset Run' },
+      { key: 'spawnBasicEnemy', label: 'Spawn Basic Enemy' },
       { key: 'clearStorage', label: '[C] Clear Storage' }
     ];
 
     for (const action of actions) {
+      // Add clickable area
+      const clickableWidth = this.panelWidth - 30;
+      const clickableHeight = 14;
+      this.clickableAreas.push({
+        x: panelX + 15,
+        y: yOffset - 2,
+        width: clickableWidth,
+        height: clickableHeight,
+        type: 'action',
+        key: action.key
+      });
+
+      // Draw hover background for better UX
+      this.uiRenderer.drawRect(panelX + 15, yOffset - 2, clickableWidth, clickableHeight, 'rgba(255, 255, 255, 0.05)');
+
       this.uiRenderer.drawText(action.label, panelX + 15, yOffset, '#9af', '11px monospace');
       yOffset += 16;
     }
@@ -116,17 +162,33 @@ export class DevOverlay {
   handleClick(x: number, y: number): boolean {
     if (!this.devTools.isVisible()) return false;
 
+    // Check each clickable area
+    for (const area of this.clickableAreas) {
+      if (x >= area.x && x <= area.x + area.width &&
+          y >= area.y && y <= area.y + area.height) {
+
+        if (area.type === 'toggle') {
+          // Toggle the dev option
+          const currentValue = this.devTools.isOn(area.key as any);
+          this.devTools.setToggle(area.key as any, !currentValue);
+          console.log(`Toggled ${area.key}: ${!currentValue}`);
+        } else if (area.type === 'action') {
+          // Execute the action
+          this.devTools.runAction(area.key as any);
+          console.log(`Executed action: ${area.key}`);
+        }
+
+        return true; // Click was handled
+      }
+    }
+
+    // Check if click is within panel bounds (for general panel interaction)
     const panelX = this.width - this.panelWidth - 10;
     const panelY = 10;
 
-    // Check if click is within panel bounds
     if (x >= panelX && x <= panelX + this.panelWidth &&
         y >= panelY && y <= panelY + this.panelHeight) {
-
-      // Handle toggle clicks (basic implementation for milestone 1)
-      // More sophisticated interaction will be added in future milestones
-      console.log('DevOverlay clicked at', x - panelX, y - panelY);
-      return true;
+      return true; // Click was within panel, consume it
     }
 
     return false;
@@ -184,5 +246,22 @@ export class DevOverlay {
         '9px monospace'
       );
     }
+  }
+
+  /** Render entity count readout for Milestone 4 */
+  renderEntityCounts(counts: { enemies: number; projectiles: number; total: number }): void {
+    if (!this.devTools.isVisible()) return;
+
+    // Position near the bottom left of screen
+    const x = 10;
+    let y = this.height - 80;
+
+    this.uiRenderer.drawText('Entity Counts:', x, y, '#ccc', '14px monospace');
+    y += 20;
+    this.uiRenderer.drawText(`Enemies: ${counts.enemies}`, x, y, '#f66', '12px monospace');
+    y += 16;
+    this.uiRenderer.drawText(`Projectiles: ${counts.projectiles}`, x, y, '#ff6', '12px monospace');
+    y += 16;
+    this.uiRenderer.drawText(`Total: ${counts.total}`, x, y, '#6f6', '12px monospace');
   }
 }

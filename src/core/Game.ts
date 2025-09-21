@@ -9,7 +9,10 @@ import { Hud } from '../ui/Hud.js';
 import { World } from './World.js';
 import { makeCreators, Creators } from '../data/creators.js';
 import { Projectile } from '../gameplay/Projectile.js';
+import { Enemy } from '../gameplay/Enemy.js';
 import { loadRegistry, Registry } from '../data/registry.js';
+import { SpawnSystem } from '../systems/SpawnSystem.js';
+import { MovementSystem } from '../systems/MovementSystem.js';
 
 // Main game loop; orchestrates systems and updates world
 // Manages rendering, input, and coordinates all game systems
@@ -30,6 +33,10 @@ export class Game {
   private running: boolean = false;
   private animationId: number = 0;
   private inRun: boolean = false;
+
+  // Game systems
+  private spawnSystem: SpawnSystem | null = null;
+  private movementSystem: MovementSystem | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -56,6 +63,7 @@ export class Game {
     try {
       this.registry = await loadRegistry();
       this.creators = makeCreators(this.registry);
+      this.initializeSystems();
       console.log('Registry loaded successfully');
     } catch (error) {
       console.error('Failed to load registry:', error);
@@ -75,18 +83,48 @@ export class Game {
             baseCooldown: 1.0, baseUpgradeStats: { damage: 10, fireRate: 1.0, range: 300 },
             levelScaling: { damage: 1.2, fireRate: 1.1, range: 1.05 }, maxLevel: 5, rarity: "common"
           }
-        }
+        },
+        enemies: {
+          basic: {
+            hp: 3, maxHp: 3, speed: 60, xp: 1, radius: 12,
+            behaviors: ["MoveDown"], color: "#FF6B6B"
+          }
+        },
+        waves: [{
+          timeStart: 0, timeEnd: 60, spawnInterval: 2.0,
+          enemies: [{ key: "basic", weight: 100 }]
+        }]
       };
       this.creators = makeCreators(this.registry);
+      this.initializeSystems();
     }
 
     // Register DevTools actions
     this.devTools.registerGameActions({
-      resetRun: () => this.resetRun()
+      resetRun: () => this.resetRun(),
+      spawnBasicEnemy: () => this.spawnEnemyManually('basic', 1)
     });
 
     this.startRun(); // Auto-start a run for milestone 3
     console.log('Game initialized');
+  }
+
+  private initializeSystems(): void {
+    if (!this.registry || !this.creators) {
+      throw new Error('Cannot initialize systems: registry or creators not available');
+    }
+
+    this.spawnSystem = new SpawnSystem({
+      world: this.world,
+      creators: this.creators,
+      reg: this.registry,
+      clock: this.clock
+    });
+
+    this.movementSystem = new MovementSystem({
+      world: this.world,
+      reg: this.registry
+    });
   }
 
   start(): void {
@@ -120,6 +158,15 @@ export class Game {
   };
 
   private update(deltaTime: number): void {
+    // Handle mouse clicks for DevOverlay
+    const mouseClick = this.input.getMouseClick();
+    if (mouseClick.clicked) {
+      const handled = this.devOverlay.handleClick(mouseClick.x, mouseClick.y);
+      if (handled) {
+        // Click was handled by DevOverlay, don't process it further
+      }
+    }
+
     // Update DevTools overlay
     this.devOverlay.update(deltaTime);
 
@@ -151,6 +198,15 @@ export class Game {
         tower.update(deltaTime);
       }
 
+      // Update systems
+      if (this.spawnSystem) {
+        this.spawnSystem.update(deltaTime);
+      }
+
+      if (this.movementSystem) {
+        this.movementSystem.update(deltaTime);
+      }
+
       // Update all entities
       for (const entity of this.world.all()) {
         if (entity.update) {
@@ -161,8 +217,6 @@ export class Game {
       // Process world updates (add/remove entities)
       this.world.update();
     }
-
-    // Update systems here in future milestones
   }
 
   private render(): void {
@@ -184,10 +238,12 @@ export class Game {
         this.uiRenderer.drawHUD(hudModel);
       }
 
-      // Render projectiles
+      // Render enemies and projectiles
       for (const entity of this.world.all()) {
         if (entity instanceof Projectile) {
           this.uiRenderer.drawProjectile(entity);
+        } else if (entity instanceof Enemy) {
+          this.uiRenderer.drawEnemy(entity);
         }
       }
     }
@@ -205,6 +261,12 @@ export class Game {
     if (this.inRun) {
       const projectiles = this.world.query((entity): entity is Projectile => entity instanceof Projectile);
       this.devOverlay.renderProjectileDebug(projectiles);
+    }
+
+    // Render entity counts if in run
+    if (this.inRun) {
+      const counts = this.getEntityCounts();
+      this.devOverlay.renderEntityCounts(counts);
     }
 
     // Render DevTools overlay last (on top)
@@ -233,6 +295,11 @@ export class Game {
 
     this.world.add(tower);
 
+    // Reset systems
+    if (this.spawnSystem) {
+      this.spawnSystem.reset();
+    }
+
     this.inRun = true;
     this.clock.reset();
     this.clock.start();
@@ -252,10 +319,30 @@ export class Game {
     this.startRun();
   }
 
+  /** Manually spawn enemy (for DevTools) */
+  spawnEnemyManually(enemyKey: string, count: number = 1): void {
+    if (this.spawnSystem && this.inRun) {
+      this.spawnSystem.requestSpawn(enemyKey, count);
+    }
+  }
+
   /** Helper method to get the tower from the world */
   private getTower(): Tower | null {
     const towers = this.world.query((entity): entity is Tower => entity instanceof Tower);
     return towers.length > 0 ? towers[0] ?? null : null;
+  }
+
+  /** Get entity counts for dev tools */
+  getEntityCounts(): { enemies: number; projectiles: number; total: number } {
+    const enemies = this.world.query((entity): entity is Enemy => entity instanceof Enemy);
+    const projectiles = this.world.query((entity): entity is Projectile => entity instanceof Projectile);
+    const total = Array.from(this.world.all()).length;
+
+    return {
+      enemies: enemies.length,
+      projectiles: projectiles.length,
+      total: total
+    };
   }
 
   resize(width: number, height: number): void {

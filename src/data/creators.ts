@@ -1,7 +1,9 @@
 import { Weapon } from '../gameplay/weapons/Weapon.js';
 import { Cannon } from '../gameplay/weapons/Cannon.js';
 import { Projectile } from '../gameplay/Projectile.js';
-import { Registry, ProjectileBlueprint, WeaponBlueprint } from './registry.js';
+import { Enemy } from '../gameplay/Enemy.js';
+import { Registry, ProjectileBlueprint, WeaponBlueprint, EnemyBlueprint } from './registry.js';
+import { Vec2 } from '../gameplay/Entity.js';
 
 // Tiny factory functions to instantiate entities/weapons from registry
 // Provides controlled entity creation from blueprint data
@@ -9,6 +11,7 @@ import { Registry, ProjectileBlueprint, WeaponBlueprint } from './registry.js';
 export type Creators = {
   weapon(key: string, level?: number): Weapon;
   projectile(key: string, x: number, y: number, vx: number, vy: number, damage: number, ownerId: number): Projectile;
+  enemy(key: string, pos: Vec2): Enemy;
 };
 
 export function makeCreators(registry: Registry): Creators {
@@ -34,6 +37,24 @@ export function makeCreators(registry: Registry): Creators {
       }
 
       return new Projectile(x, y, vx, vy, damage, ownerId, blueprint.lifetime, blueprint.radius);
+    },
+
+    enemy(key: string, pos: Vec2): Enemy {
+      const blueprint = registry.enemies[key];
+      if (!blueprint) {
+        throw new Error(`Unknown enemy key: ${key}`);
+      }
+
+      return new Enemy({
+        hp: blueprint.hp,
+        maxHp: blueprint.maxHp,
+        xp: blueprint.xp,
+        speed: blueprint.speed,
+        radius: blueprint.radius,
+        behaviorKeys: blueprint.behaviors,
+        color: blueprint.color,
+        pos: pos
+      });
     },
 
     registry // Add registry access for weapons

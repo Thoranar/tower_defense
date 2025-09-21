@@ -2,5 +2,64 @@
 // Defines enemy spawn timing, rates, and composition over time
 // Controls game difficulty progression and enemy variety
 [
-  // TODO: Define wave schedules and spawn tables
+  {
+    "timeStart": 0,
+    "timeEnd": 60,
+    "spawnInterval": 2.0,
+    "enemies": [
+      { "key": "basic", "weight": 100 }
+    ]
+  },
+  {
+    "timeStart": 60,
+    "timeEnd": 120,
+    "spawnInterval": 1.8,
+    "enemies": [
+      { "key": "basic", "weight": 80 },
+      { "key": "fast", "weight": 20 }
+    ]
+  },
+  {
+    "timeStart": 120,
+    "timeEnd": 200,
+    "spawnInterval": 1.5,
+    "enemies": [
+      { "key": "basic", "weight": 60 },
+      { "key": "fast", "weight": 30 },
+      { "key": "scout", "weight": 10 }
+    ]
+  },
+  {
+    "timeStart": 200,
+    "timeEnd": 300,
+    "spawnInterval": 1.2,
+    "enemies": [
+      { "key": "basic", "weight": 50 },
+      { "key": "fast", "weight": 25 },
+      { "key": "heavy", "weight": 15 },
+      { "key": "scout", "weight": 10 }
+    ]
+  },
+  {
+    "timeStart": 300,
+    "timeEnd": 450,
+    "spawnInterval": 1.0,
+    "enemies": [
+      { "key": "basic", "weight": 40 },
+      { "key": "fast", "weight": 30 },
+      { "key": "heavy", "weight": 20 },
+      { "key": "scout", "weight": 10 }
+    ]
+  },
+  {
+    "timeStart": 450,
+    "timeEnd": 600,
+    "spawnInterval": 0.8,
+    "enemies": [
+      { "key": "basic", "weight": 30 },
+      { "key": "fast", "weight": 35 },
+      { "key": "heavy", "weight": 25 },
+      { "key": "scout", "weight": 10 }
+    ]
+  }
 ]

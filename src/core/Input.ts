@@ -3,7 +3,7 @@
 // Handles tower rotation controls and UI interactions
 export class Input {
   private keys: Map<string, boolean> = new Map();
-  private mouse: { x: number; y: number; down: boolean } = { x: 0, y: 0, down: false };
+  private mouse: { x: number; y: number; down: boolean; clicked: boolean } = { x: 0, y: 0, down: false, clicked: false };
   private canvas: HTMLCanvasElement;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -34,6 +34,9 @@ export class Input {
     });
 
     this.canvas.addEventListener('mouseup', (event) => {
+      if (this.mouse.down) {
+        this.mouse.clicked = true; // Set clicked flag when mouse is released after being down
+      }
       this.mouse.down = false;
       event.preventDefault();
     });
@@ -57,6 +60,24 @@ export class Input {
   /** Check if mouse button is down */
   isMouseDown(): boolean {
     return this.mouse.down;
+  }
+
+  /** Check if mouse was clicked this frame (consume the click) */
+  wasMouseClicked(): boolean {
+    if (this.mouse.clicked) {
+      this.mouse.clicked = false; // Clear the flag after reading
+      return true;
+    }
+    return false;
+  }
+
+  /** Get current mouse position for click handling */
+  getMouseClick(): { x: number; y: number; clicked: boolean } {
+    const clicked = this.mouse.clicked;
+    if (clicked) {
+      this.mouse.clicked = false; // Clear the flag after reading
+    }
+    return { x: this.mouse.x, y: this.mouse.y, clicked };
   }
 
   /** Calculate angle from point to mouse position */
