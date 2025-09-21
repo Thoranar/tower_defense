@@ -6,7 +6,7 @@ import { Game } from './core/Game.js';
 
 console.log('Tower Defense Game - Loading...');
 
-function main(): void {
+async function main(): Promise<void> {
   const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
   if (!canvas) {
     throw new Error('Game canvas not found');
@@ -14,7 +14,7 @@ function main(): void {
 
   // Initialize the game
   const game = new Game(canvas);
-  game.init();
+  await game.init();
 
   // Handle window resize
   function handleResize(): void {

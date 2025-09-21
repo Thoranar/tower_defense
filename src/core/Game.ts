@@ -7,6 +7,9 @@ import { Input } from './Input.js';
 import { Tower } from '../gameplay/Tower.js';
 import { Hud } from '../ui/Hud.js';
 import { World } from './World.js';
+import { makeCreators, Creators } from '../data/creators.js';
+import { Projectile } from '../gameplay/Projectile.js';
+import { loadRegistry, Registry } from '../data/registry.js';
 
 // Main game loop; orchestrates systems and updates world
 // Manages rendering, input, and coordinates all game systems
@@ -22,6 +25,8 @@ export class Game {
   private input: Input;
   private world: World;
   private hud: Hud;
+  private creators: Creators | null = null;
+  private registry: Registry | null = null;
   private running: boolean = false;
   private animationId: number = 0;
   private inRun: boolean = false;
@@ -44,15 +49,44 @@ export class Game {
     this.hud = new Hud();
   }
 
-  init(): void {
-    console.log('Game initialized');
+  async init(): Promise<void> {
+    console.log('Game initializing...');
+
+    // Load registry and create creators
+    try {
+      this.registry = await loadRegistry();
+      this.creators = makeCreators(this.registry);
+      console.log('Registry loaded successfully');
+    } catch (error) {
+      console.error('Failed to load registry:', error);
+      // Use fallback for testing
+      this.registry = {
+        projectiles: {
+          bullet: {
+            name: "Bullet", description: "Standard projectile", speed: 200, lifetime: 3.0, radius: 3,
+            visual: { type: "circle", color: "#ffff00", size: 6 },
+            physics: { piercing: false, gravity: false, bounce: false },
+            effects: { trail: false, explosion: false }
+          }
+        },
+        weapons: {
+          cannon: {
+            name: "Cannon", description: "Standard cannon", type: "cannon", projectileKey: "bullet",
+            baseCooldown: 1.0, baseUpgradeStats: { damage: 10, fireRate: 1.0, range: 300 },
+            levelScaling: { damage: 1.2, fireRate: 1.1, range: 1.05 }, maxLevel: 5, rarity: "common"
+          }
+        }
+      };
+      this.creators = makeCreators(this.registry);
+    }
 
     // Register DevTools actions
     this.devTools.registerGameActions({
       resetRun: () => this.resetRun()
     });
 
-    this.startRun(); // Auto-start a run for milestone 2
+    this.startRun(); // Auto-start a run for milestone 3
+    console.log('Game initialized');
   }
 
   start(): void {
@@ -105,6 +139,14 @@ export class Game {
           tower.setTurretAngle(mouseAngle);
         }
 
+        // Handle weapon firing (automatic for Milestone 3)
+        // Apply fire rate multiplier from DevTools
+        const fireRateMultiplier = this.devTools.getSlider('fireRateMult');
+        const projectiles = tower.fireWeapons(fireRateMultiplier, this.creators);
+        for (const projectile of projectiles) {
+          this.world.add(projectile);
+        }
+
         // Update tower
         tower.update(deltaTime);
       }
@@ -142,8 +184,12 @@ export class Game {
         this.uiRenderer.drawHUD(hudModel);
       }
 
-      // Render other entities (enemies, projectiles) in future milestones
-      // for (const entity of this.world.all()) { ... }
+      // Render projectiles
+      for (const entity of this.world.all()) {
+        if (entity instanceof Projectile) {
+          this.uiRenderer.drawProjectile(entity);
+        }
+      }
     }
 
     // Show FPS if enabled in DevTools
@@ -155,6 +201,12 @@ export class Game {
     this.devOverlay.renderDebugOverlays();
     this.devOverlay.renderInputDebug(this.input, this.getTower());
 
+    // Render projectile debug info if enabled
+    if (this.inRun) {
+      const projectiles = this.world.query((entity): entity is Projectile => entity instanceof Projectile);
+      this.devOverlay.renderProjectileDebug(projectiles);
+    }
+
     // Render DevTools overlay last (on top)
     this.devOverlay.render();
 
@@ -162,6 +214,11 @@ export class Game {
   }
 
   startRun(): void {
+    if (!this.creators) {
+      console.error('Cannot start run: creators not initialized');
+      return;
+    }
+
     console.log('Starting new run');
 
     // Clear world and create tower at bottom center
@@ -169,6 +226,11 @@ export class Game {
     const centerX = this.canvas.width / 2;
     const groundY = this.renderer.getGroundY();
     const tower = new Tower(centerX, groundY - 30); // 30 pixels above ground
+
+    // Equip tower with a cannon weapon for Milestone 3
+    const cannon = this.creators.weapon('cannon', 1);
+    tower.addWeapon(cannon);
+
     this.world.add(tower);
 
     this.inRun = true;

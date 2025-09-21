@@ -2,5 +2,24 @@
 // Contains all weapon types available to towers and support buildings
 // Defines weapon stats and per-level scaling parameters
 {
-  // TODO: Define weapon blueprints and scaling properties
+  // Base cannon weapon for tower defense
+  "cannon": {
+    "name": "Cannon",
+    "description": "Standard tower cannon that fires upward",
+    "type": "cannon",
+    "projectileKey": "bullet",
+    "baseCooldown": 1.0,  // seconds between shots
+    "baseUpgradeStats": {
+      "damage": 10,
+      "fireRate": 1.0,
+      "range": 300
+    },
+    "levelScaling": {
+      "damage": 1.2,     // multiplier per level
+      "fireRate": 1.1,   // faster firing per level
+      "range": 1.05      // slight range increase per level
+    },
+    "maxLevel": 5,
+    "rarity": "common"
+  }
 }

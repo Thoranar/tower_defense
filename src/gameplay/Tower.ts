@@ -1,4 +1,6 @@
 import { Entity, Vec2 } from './Entity.js';
+import { Weapon, FireContext } from './weapons/Weapon.js';
+import { Projectile } from './Projectile.js';
 
 // Tower stats type definition
 export type TowerStats = {
@@ -14,7 +16,7 @@ export type TowerStats = {
 // Manages weapon systems, health, and turret rotation
 export class Tower extends Entity {
   stats: TowerStats;             // hp, maxHp, damageMult, fireRateMult, regen
-  weapons: any[] = [];           // equipped weapons (empty for milestone 2)
+  weapons: Weapon[] = [];        // equipped weapons
   turretAngle: number = 0;       // rad; controlled by input
 
   constructor(x: number, y: number) {
@@ -42,7 +44,7 @@ export class Tower extends Entity {
   }
 
   /** Add a weapon instance to the tower. */
-  addWeapon(weapon: any): void {
+  addWeapon(weapon: Weapon): void {
     this.weapons.push(weapon);
     console.log('Weapon added to tower');
   }
@@ -60,11 +62,35 @@ export class Tower extends Entity {
     };
   }
 
+  /** Fire all weapons and return projectiles created */
+  fireWeapons(fireRateMultiplier: number = 1.0, creators: any = null): Projectile[] {
+    const projectiles: Projectile[] = [];
+
+    for (const weapon of this.weapons) {
+      const fireContext: FireContext = {
+        ownerId: this.id,
+        origin: { x: this.pos.x, y: this.pos.y },
+        direction: this.getTurretDirection(),
+        creators: creators
+      };
+
+      const newProjectiles = weapon.fire(fireContext, fireRateMultiplier);
+      projectiles.push(...newProjectiles);
+    }
+
+    return projectiles;
+  }
+
   /** Optional update for tower-specific logic */
   update(dt: number): void {
     // Apply regeneration if any
     if (this.stats.regen > 0 && this.stats.hp < this.stats.maxHp) {
       this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + this.stats.regen * dt);
+    }
+
+    // Update weapon cooldowns
+    for (const weapon of this.weapons) {
+      weapon.tick(dt);
     }
   }
 }

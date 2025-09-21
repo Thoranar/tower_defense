@@ -10,7 +10,9 @@
     "clean": "node -e \"const fs=require('fs'); if(fs.existsSync('dist')) fs.rmSync('dist', {recursive: true});\"",
     "dev": "npm run build && npx http-server dist -p 3000 -c-1",
     "serve": "npx http-server dist -p 3000",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "watch-content": "node scripts/watch-content.js",
+    "dev-watch": "npm run build && node scripts/dev-watch.js"
   },
   "repository": {
     "type": "git",

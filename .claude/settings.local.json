@@ -9,7 +9,13 @@
       "Bash(git push:*)",
       "Bash(git commit:*)",
       "Bash(npm install)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx http-server:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:thoranar.github.io)",
+      "Bash(curl:*)",
+      "Bash(npm run watch-content:*)"
     ],
     "deny": [],
     "ask": []

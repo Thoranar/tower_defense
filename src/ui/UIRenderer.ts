@@ -122,4 +122,21 @@ export class UIRenderer {
     this.ctx.lineTo(endX, endY);
     this.ctx.stroke();
   }
+
+  drawProjectile(projectile: any): void {
+    const x = projectile.pos.x;
+    const y = projectile.pos.y;
+    const radius = projectile.radius;
+
+    // Draw projectile as a yellow circle
+    this.ctx.fillStyle = '#ffff00';
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Draw outline
+    this.ctx.strokeStyle = '#ffcc00';
+    this.ctx.lineWidth = 1;
+    this.ctx.stroke();
+  }
 }

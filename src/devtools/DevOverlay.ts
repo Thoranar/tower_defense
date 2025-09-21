@@ -2,6 +2,7 @@ import { DevToolsSystem } from './DevToolsSystem.js';
 import { UIRenderer } from '../ui/UIRenderer.js';
 import { Input } from '../core/Input.js';
 import { Tower } from '../gameplay/Tower.js';
+import { Projectile } from '../gameplay/Projectile.js';
 
 // Developer overlay panel UI
 // Renders and manages the in-game developer tools interface
@@ -154,6 +155,34 @@ export class DevOverlay {
     if (tower) {
       const angleDeg = (tower.turretAngle * 180 / Math.PI).toFixed(1);
       this.uiRenderer.drawText(`Turret: ${angleDeg}°`, 10, y, '#fff', '12px monospace');
+    }
+  }
+
+  /** Render projectile debug information for Milestone 3 */
+  renderProjectileDebug(projectiles: Projectile[]): void {
+    if (!this.devTools.isOn('projectileDebug')) return;
+
+    for (const projectile of projectiles) {
+      // Draw projectile ID and lifetime above each projectile
+      const x = projectile.pos.x;
+      const y = projectile.pos.y - 15; // Above the projectile
+      const lifePercent = ((projectile.lifetime / projectile.maxLifetime) * 100).toFixed(0);
+
+      this.uiRenderer.drawText(
+        `${projectile.id}`,
+        x - 10,
+        y,
+        '#0ff',
+        '10px monospace'
+      );
+
+      this.uiRenderer.drawText(
+        `${lifePercent}%`,
+        x - 10,
+        y - 12,
+        '#0af',
+        '9px monospace'
+      );
     }
   }
 }

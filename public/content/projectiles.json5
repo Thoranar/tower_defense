@@ -2,5 +2,26 @@
 // Contains all projectile types used by weapons and support buildings
 // Defines projectile physics and collision properties
 {
-  // TODO: Define projectile blueprints and properties
+  // Standard bullet projectile for cannon weapon
+  "bullet": {
+    "name": "Bullet",
+    "description": "Standard projectile fired by cannon",
+    "speed": 400,         // pixels per second
+    "lifetime": 3.0,      // seconds before auto-despawn
+    "radius": 3,          // collision radius in pixels
+    "visual": {
+      "type": "circle",
+      "color": "#ffff00", // yellow
+      "size": 6           // visual diameter
+    },
+    "physics": {
+      "piercing": false,  // destroyed on first hit
+      "gravity": false,   // unaffected by gravity
+      "bounce": false     // no bouncing
+    },
+    "effects": {
+      "trail": false,     // no visual trail
+      "explosion": false  // no explosion on impact
+    }
+  }
 }
