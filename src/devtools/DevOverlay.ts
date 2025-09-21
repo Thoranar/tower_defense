@@ -1,5 +1,7 @@
 import { DevToolsSystem } from './DevToolsSystem.js';
 import { UIRenderer } from '../ui/UIRenderer.js';
+import { Input } from '../core/Input.js';
+import { Tower } from '../gameplay/Tower.js';
 
 // Developer overlay panel UI
 // Renders and manages the in-game developer tools interface
@@ -44,13 +46,13 @@ export class DevOverlay {
 
     const toggles = this.devTools.getToggles();
     const toggleEntries = [
-      { key: 'showFps', label: 'Show FPS' },
-      { key: 'showBounds', label: 'Canvas Bounds' },
-      { key: 'showInput', label: 'Input Debug' },
-      { key: 'projectileDebug', label: 'Projectile Debug' },
-      { key: 'behaviorTrails', label: 'Behavior Trails' },
-      { key: 'collisionMarkers', label: 'Collision Markers' },
-      { key: 'hitLogs', label: 'Hit Logs' }
+      { key: 'showFps', label: 'Show FPS', shortcut: '' },
+      { key: 'showBounds', label: '[2] Canvas Bounds', shortcut: '2' },
+      { key: 'showInput', label: '[1] Input Debug', shortcut: '1' },
+      { key: 'projectileDebug', label: 'Projectile Debug', shortcut: '' },
+      { key: 'behaviorTrails', label: 'Behavior Trails', shortcut: '' },
+      { key: 'collisionMarkers', label: 'Collision Markers', shortcut: '' },
+      { key: 'hitLogs', label: 'Hit Logs', shortcut: '' }
     ];
 
     for (const toggle of toggleEntries) {
@@ -63,14 +65,30 @@ export class DevOverlay {
 
     yOffset += 10;
 
-    // Instructions
-    this.uiRenderer.drawText('Instructions:', panelX + 10, yOffset, '#ccc', '12px monospace');
+    // Actions section
+    this.uiRenderer.drawText('Actions:', panelX + 10, yOffset, '#ccc', '12px monospace');
     yOffset += 20;
-    this.uiRenderer.drawText('Press ` to toggle panel', panelX + 15, yOffset, '#999', '10px monospace');
+
+    const actions = [
+      { key: 'resetRun', label: '[R] Reset Run' },
+      { key: 'clearStorage', label: '[C] Clear Storage' }
+    ];
+
+    for (const action of actions) {
+      this.uiRenderer.drawText(action.label, panelX + 15, yOffset, '#9af', '11px monospace');
+      yOffset += 16;
+    }
+
+    yOffset += 10;
+
+    // Instructions
+    this.uiRenderer.drawText('Controls:', panelX + 10, yOffset, '#ccc', '12px monospace');
+    yOffset += 20;
+    this.uiRenderer.drawText('` - Toggle dev panel', panelX + 15, yOffset, '#999', '10px monospace');
     yOffset += 14;
-    this.uiRenderer.drawText('More controls in future', panelX + 15, yOffset, '#999', '10px monospace');
+    this.uiRenderer.drawText('A/D or ←/→ - Rotate turret', panelX + 15, yOffset, '#999', '10px monospace');
     yOffset += 14;
-    this.uiRenderer.drawText('milestones...', panelX + 15, yOffset, '#999', '10px monospace');
+    this.uiRenderer.drawText('Mouse - Aim turret', panelX + 15, yOffset, '#999', '10px monospace');
   }
 
   renderDebugOverlays(): void {
@@ -111,5 +129,31 @@ export class DevOverlay {
     }
 
     return false;
+  }
+
+  /** Render input debug information (moved from Game.ts) */
+  renderInputDebug(input: Input, tower: Tower | null): void {
+    if (!this.devTools.isOn('showInput')) return;
+
+    const inputState = input.getDebugState();
+    let y = 120;
+
+    this.uiRenderer.drawText('Input Debug:', 10, y, '#ff0', '14px monospace');
+    y += 20;
+
+    if (inputState.pressedKeys.length > 0) {
+      this.uiRenderer.drawText(`Keys: ${inputState.pressedKeys.join(', ')}`, 10, y, '#fff', '12px monospace');
+    } else {
+      this.uiRenderer.drawText('Keys: (none)', 10, y, '#666', '12px monospace');
+    }
+    y += 16;
+
+    this.uiRenderer.drawText(`Mouse: ${Math.round(inputState.mouse.x)}, ${Math.round(inputState.mouse.y)} ${inputState.mouse.down ? '[DOWN]' : ''}`, 10, y, '#fff', '12px monospace');
+    y += 16;
+
+    if (tower) {
+      const angleDeg = (tower.turretAngle * 180 / Math.PI).toFixed(1);
+      this.uiRenderer.drawText(`Turret: ${angleDeg}°`, 10, y, '#fff', '12px monospace');
+    }
   }
 }

@@ -35,9 +35,33 @@ export class DevToolsSystem {
 
   private attachInput(): void {
     document.addEventListener('keydown', (event) => {
+      // Toggle DevTools panel
       if (event.key === this.shortcutKey && !event.repeat) {
         this.toggleVisibility();
         event.preventDefault();
+        return;
+      }
+
+      // DevTools shortcuts (only when panel is visible)
+      if (this.visible && !event.repeat) {
+        switch (event.code) {
+          case 'KeyR':
+            this.runAction('resetRun');
+            event.preventDefault();
+            break;
+          case 'KeyC':
+            this.runAction('clearStorage');
+            event.preventDefault();
+            break;
+          case 'Digit1':
+            this.setToggle('showInput', !this.isOn('showInput'));
+            event.preventDefault();
+            break;
+          case 'Digit2':
+            this.setToggle('showBounds', !this.isOn('showBounds'));
+            event.preventDefault();
+            break;
+        }
       }
     });
   }
@@ -73,12 +97,23 @@ export class DevToolsSystem {
     }
   }
 
+  private gameActions: { [key: string]: () => void } = {};
+
+  /** Register game action callbacks for DevTools */
+  registerGameActions(actions: { [key: string]: () => void }): void {
+    Object.assign(this.gameActions, actions);
+  }
+
   runAction(key: ActionKey): void {
     console.log(`DevTools action: ${key}`);
-    // Actions will be implemented in future milestones
+
     switch (key) {
       case 'resetRun':
-        console.log('Reset run requested');
+        if (this.gameActions.resetRun) {
+          this.gameActions.resetRun();
+        } else {
+          console.log('Reset run requested (no handler)');
+        }
         break;
       case 'clearStorage':
         this.clearStorage();
