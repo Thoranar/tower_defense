@@ -1,0 +1,6 @@
+// Wave schedules and enemy spawn compositions
+// Defines enemy spawn timing, rates, and composition over time
+// Controls game difficulty progression and enemy variety
+[
+  // TODO: Define wave schedules and spawn tables
+]

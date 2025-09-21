@@ -1,0 +1,6 @@
+// Enemy definitions with stats, behaviors, and sprites
+// Contains all enemy types, their health, speed, XP rewards, and behaviors
+// Data-driven enemy configuration for flexible content authoring
+{
+  // TODO: Define enemy blueprints and behavior patterns
+}

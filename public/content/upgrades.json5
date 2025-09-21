@@ -1,0 +1,6 @@
+// Upgrade definitions with stat boosts and special effects
+// Contains all available upgrades for towers, weapons, and support buildings
+// Defines upgrade effects and slot/level constraints
+{
+  // TODO: Define upgrade blueprints and effect operations
+}

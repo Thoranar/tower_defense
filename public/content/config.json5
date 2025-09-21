@@ -1,0 +1,6 @@
+// Global game configuration and rule definitions
+// Contains XP curves, timing rules, upgrade limits, and prestige settings
+// Central location for all game balance and rule parameters
+{
+  // TODO: Define game configuration parameters
+}

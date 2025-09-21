@@ -1,0 +1,6 @@
+// Projectile definitions with speed, damage, and visual properties
+// Contains all projectile types used by weapons and support buildings
+// Defines projectile physics and collision properties
+{
+  // TODO: Define projectile blueprints and properties
+}

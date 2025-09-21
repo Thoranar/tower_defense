@@ -1,0 +1,6 @@
+// Weapon definitions with cooldowns, damage, and upgrade scaling
+// Contains all weapon types available to towers and support buildings
+// Defines weapon stats and per-level scaling parameters
+{
+  // TODO: Define weapon blueprints and scaling properties
+}

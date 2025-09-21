@@ -1,0 +1,6 @@
+// Card definitions for level-up draft selections
+// Contains all cards shown during level-up with titles, descriptions, and outcomes
+// Links to upgrade system for card selection results
+{
+  // TODO: Define card blueprints and selection outcomes
+}
