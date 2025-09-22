@@ -134,6 +134,13 @@ export class DevToolsSystem {
           console.log('Spawn basic enemy requested (no handler)');
         }
         break;
+      case 'spawnBossNow':
+        if (this.gameActions.spawnBossNow) {
+          this.gameActions.spawnBossNow();
+        } else {
+          console.log('Spawn boss now requested (no handler)');
+        }
+        break;
       case 'grantXp':
         if (this.gameActions.grantXp) {
           this.gameActions.grantXp();

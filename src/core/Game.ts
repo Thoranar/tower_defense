@@ -21,6 +21,7 @@ import { CombatSystem } from '../systems/CombatSystem.js';
 import { ExperienceSystem } from '../systems/ExperienceSystem.js';
 import { CardDraftSystem } from '../systems/CardDraftSystem.js';
 import { UpgradeSystem } from '../systems/UpgradeSystem.js';
+import { BossSystem } from '../systems/BossSystem.js';
 import { CardOverlayView } from '../ui/CardOverlayView.js';
 import { EventBus } from './EventBus.js';
 
@@ -48,6 +49,7 @@ export class Game {
 
   // Game systems
   private spawnSystem: SpawnSystem | null = null;
+  private bossSystem: BossSystem | null = null;
   private movementSystem: MovementSystem | null = null;
   private collisionSystem: CollisionSystem | null = null;
   private combatSystem: CombatSystem | null = null;
@@ -110,6 +112,7 @@ export class Game {
     this.devTools.registerGameActions({
       resetRun: () => this.resetRun(),
       spawnBasicEnemy: () => this.spawnEnemyManually('basic', 1),
+      spawnBossNow: () => this.spawnBossManually('shadowStalker'),
       grantXp: () => this.grantXpManually(10),
       getUpgradeState: () => this.upgradeSystem?.getUpgradeState() || { levels: {}, slots: { used: 0, max: 5 }, canSelectAny: false }
     });
@@ -132,11 +135,21 @@ export class Game {
       throw new Error('Cannot initialize systems: registry or creators not available');
     }
 
+    // Initialize BossSystem first
+    this.bossSystem = new BossSystem({
+      world: this.world,
+      creators: this.creators,
+      reg: this.registry,
+      clock: this.clock,
+      eventBus: this.bus
+    });
+
     this.spawnSystem = new SpawnSystem({
       world: this.world,
       creators: this.creators,
       reg: this.registry,
-      clock: this.clock
+      clock: this.clock,
+      bossSystem: this.bossSystem
     });
 
     this.movementSystem = new MovementSystem({
@@ -261,6 +274,11 @@ export class Game {
    * Update all game systems in the proper order
    */
   private updateGameSystems(deltaTime: number): void {
+    // Update boss system first (handles boss spawn timing and warnings)
+    if (this.bossSystem) {
+      this.bossSystem.update(deltaTime);
+    }
+
     if (this.spawnSystem) {
       this.spawnSystem.update(deltaTime);
     }
@@ -301,6 +319,7 @@ export class Game {
         clock: this.clock,
         experienceSystem: this.experienceSystem || undefined,
         combatSystem: this.combatSystem || undefined,
+        bossSystem: this.bossSystem || undefined,
         showFps: this.devTools.isOn('showFps')
       });
     }
@@ -363,6 +382,9 @@ export class Game {
     this.world.add(tower);
 
     // Reset systems
+    if (this.bossSystem) {
+      this.bossSystem.reset();
+    }
     if (this.spawnSystem) {
       this.spawnSystem.reset();
     }
@@ -407,6 +429,13 @@ export class Game {
   spawnEnemyManually(enemyKey: string, count: number = 1): void {
     if (this.spawnSystem && this.inRun) {
       this.spawnSystem.requestSpawn(enemyKey, count);
+    }
+  }
+
+  /** Manually spawn boss (for DevTools) */
+  spawnBossManually(bossKey: string, bossType: 'mini' | 'final' = 'mini'): void {
+    if (this.bossSystem && this.inRun) {
+      this.bossSystem.requestSpawnBoss(bossKey, bossType);
     }
   }
 

@@ -209,4 +209,86 @@ export class UIRenderer {
 
     this.ctx.restore();
   }
+
+  drawBossWarning(bossType: 'mini' | 'final', timeRemaining: number, bossKey?: string): void {
+    const centerX = this.width / 2;
+    const centerY = this.height / 2 - 100;
+
+    // Warning banner background
+    const bannerWidth = 400;
+    const bannerHeight = 80;
+    const bannerX = centerX - bannerWidth / 2;
+    const bannerY = centerY - bannerHeight / 2;
+
+    // Pulsing effect based on time remaining
+    const pulseIntensity = Math.sin(Date.now() * 0.01) * 0.3 + 0.7;
+    const warningColor = bossType === 'final' ? `rgba(255, 0, 0, ${pulseIntensity})` : `rgba(255, 165, 0, ${pulseIntensity})`;
+
+    // Draw banner background
+    this.ctx.fillStyle = warningColor;
+    this.ctx.fillRect(bannerX, bannerY, bannerWidth, bannerHeight);
+
+    // Draw banner border
+    this.ctx.strokeStyle = '#000';
+    this.ctx.lineWidth = 3;
+    this.ctx.strokeRect(bannerX, bannerY, bannerWidth, bannerHeight);
+
+    // Warning text
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = 'bold 20px monospace';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+
+    const warningText = bossType === 'final' ? 'FINAL BOSS APPROACHING!' : 'MINI-BOSS INCOMING!';
+    this.ctx.fillText(warningText, centerX, centerY - 15);
+
+    // Countdown
+    this.ctx.font = 'bold 16px monospace';
+    const countdownText = `${Math.ceil(timeRemaining)}s`;
+    this.ctx.fillText(countdownText, centerX, centerY + 15);
+
+    // Boss name if available
+    if (bossKey) {
+      this.ctx.font = '14px monospace';
+      const bossName = bossKey.charAt(0).toUpperCase() + bossKey.slice(1);
+      this.ctx.fillText(bossName, centerX, centerY + 35);
+    }
+  }
+
+  drawBossHealthBar(boss: any): void {
+    if (!boss || !boss.isBoss) return;
+
+    // Boss health bar at top of screen
+    const barWidth = this.width * 0.8;
+    const barHeight = 20;
+    const barX = (this.width - barWidth) / 2;
+    const barY = 60;
+
+    const hpPercent = boss.hp / boss.maxHp;
+
+    // Background
+    this.ctx.fillStyle = '#333';
+    this.ctx.fillRect(barX, barY, barWidth, barHeight);
+
+    // Health fill - red for bosses
+    this.ctx.fillStyle = '#ff0000';
+    this.ctx.fillRect(barX, barY, barWidth * hpPercent, barHeight);
+
+    // Border
+    this.ctx.strokeStyle = '#666';
+    this.ctx.lineWidth = 2;
+    this.ctx.strokeRect(barX, barY, barWidth, barHeight);
+
+    // Boss label and HP text
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = 'bold 14px monospace';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'top';
+
+    const bossLabel = boss.bossType === 'final' ? 'FINAL BOSS' : 'MINI-BOSS';
+    this.ctx.fillText(bossLabel, this.width / 2, barY - 18);
+
+    this.ctx.font = '12px monospace';
+    this.ctx.fillText(`${Math.ceil(boss.hp)}/${boss.maxHp}`, this.width / 2, barY + barHeight + 5);
+  }
 }

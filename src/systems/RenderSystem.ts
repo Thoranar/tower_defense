@@ -7,6 +7,7 @@ import { Projectile } from '../gameplay/Projectile.js';
 import { Clock } from '../core/Clock.js';
 import { ExperienceSystem } from './ExperienceSystem.js';
 import { CombatSystem } from './CombatSystem.js';
+import { BossSystem } from './BossSystem.js';
 import { Hud } from '../ui/Hud.js';
 
 /**
@@ -43,6 +44,7 @@ export class RenderSystem {
     clock: Clock;
     experienceSystem?: ExperienceSystem | undefined;
     combatSystem?: CombatSystem | undefined;
+    bossSystem?: BossSystem | undefined;
     showFps?: boolean;
   }): void {
     // Clear and render background
@@ -55,6 +57,7 @@ export class RenderSystem {
     if (args.inRun && args.tower) {
       this.renderGameEntities(args.tower, args.clock, args.experienceSystem);
       this.renderFloatingDamage(args.combatSystem);
+      this.renderBossUI(args.bossSystem);
     }
 
     // Show FPS if enabled
@@ -111,6 +114,25 @@ export class RenderSystem {
           maxAge
         );
       }
+    }
+  }
+
+  /**
+   * Render boss-related UI elements
+   */
+  private renderBossUI(bossSystem?: BossSystem | undefined): void {
+    if (!bossSystem) return;
+
+    // Render boss warning if active
+    const warning = bossSystem.getCurrentWarning();
+    if (warning) {
+      this.uiRenderer.drawBossWarning(warning.type, warning.timeRemaining, warning.bossKey);
+    }
+
+    // Render boss health bar if boss is active
+    const activeBoss = bossSystem.getActiveBoss();
+    if (activeBoss) {
+      this.uiRenderer.drawBossHealthBar(activeBoss);
     }
   }
 

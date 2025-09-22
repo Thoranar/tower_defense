@@ -1,7 +1,8 @@
 // Wave schedules and enemy spawn compositions
 // Defines enemy spawn timing, rates, and composition over time
 // Controls game difficulty progression and enemy variety
-[
+{
+  "waves": [
   {
     "timeStart": 0,
     "timeEnd": 60,
@@ -62,4 +63,29 @@
       { "key": "scout", "weight": 10 }
     ]
   }
-]
+],
+
+  // Mini-boss configuration
+  "miniBosses": {
+    "enabled": true,
+    "interval": 60, // Spawn every 60 seconds (1 minute)
+    "warningTime": 10, // 10 second warning before spawn
+    "statModifiers": {
+      "hp": 1.0, // Base modifier per wave (1.0x for wave 1, 2.0x for wave 2, etc.)
+      "damage": 0.5, // Additional damage scaling
+      "speed": 0.1 // Speed scaling
+    },
+    "pool": [
+      "shadowStalker",
+      "ironGuard",
+      "voidReaper"
+    ]
+  },
+
+  // Final boss configuration
+  "finalBoss": {
+    "spawnTime": 600, // 10 minutes
+    "warningTime": 30, // 30 second warning
+    "key": "ancientTitan"
+  }
+}

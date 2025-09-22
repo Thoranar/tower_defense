@@ -8,26 +8,34 @@ import { Registry, WaveBlueprint } from '../data/registry.js';
 import { Creators } from '../data/creators.js';
 import { Vec2 } from '../gameplay/Entity.js';
 import { MoveDown } from '../gameplay/behaviors/MoveDown.js';
+import { BossSystem } from './BossSystem.js';
 
 export class SpawnSystem {
   private world: World;
   private creators: Creators;
   private registry: Registry;
   private clock: Clock;
+  private bossSystem: BossSystem | undefined;
 
   private spawnTimer: number = 0;
   private currentWave: WaveBlueprint | null = null;
 
-  constructor(args: { world: World; creators: Creators; reg: Registry; clock: Clock }) {
+  constructor(args: { world: World; creators: Creators; reg: Registry; clock: Clock; bossSystem?: BossSystem }) {
     this.world = args.world;
     this.creators = args.creators;
     this.registry = args.reg;
     this.clock = args.clock;
+    this.bossSystem = args.bossSystem;
   }
 
   /** Called every frame; spawns enemies according to active wave band */
   update(dt: number): void {
     const currentTime = this.clock.getElapsedTime();
+
+    // Check if boss system is preventing normal spawns
+    if (this.bossSystem?.isPreventingNormalSpawns()) {
+      return; // Boss spawning or active, don't spawn normal enemies
+    }
 
     // Find current wave based on time
     this.currentWave = this.findCurrentWave(currentTime);
@@ -60,7 +68,8 @@ export class SpawnSystem {
   }
 
   private findCurrentWave(time: number): WaveBlueprint | null {
-    return this.registry.waves.find(wave =>
+    const waves = this.registry.waveConfig?.waves || this.registry.waves;
+    return waves.find(wave =>
       time >= wave.timeStart && time < wave.timeEnd
     ) || null;
   }

@@ -1,6 +1,60 @@
-// Super enemy blueprint for 10-minute boss encounter
-// Defines the ultimate challenge boss with special behaviors and high health
-// Controls end-game boss mechanics and abilities
+// Boss enemy blueprints for mini-bosses and final boss
+// Defines boss stats, behaviors, and special abilities
+// Controls boss encounter mechanics and scaling
 {
-  // TODO: Define boss blueprint and special behaviors
+  // Mini-boss pool - randomly selected and scaled based on wave
+  "shadowStalker": {
+    "hp": 50,
+    "maxHp": 50,
+    "speed": 40,
+    "xp": 25,
+    "radius": 20,
+    "behaviors": ["MoveDown"],
+    "sprite": "boss_shadow",
+    "color": "#8B008B",
+    "damage": 3,
+    "isBoss": true,
+    "bossType": "mini"
+  },
+  "ironGuard": {
+    "hp": 80,
+    "maxHp": 80,
+    "speed": 25,
+    "xp": 30,
+    "radius": 25,
+    "behaviors": ["MoveDown"],
+    "sprite": "boss_iron",
+    "color": "#696969",
+    "damage": 4,
+    "isBoss": true,
+    "bossType": "mini"
+  },
+  "voidReaper": {
+    "hp": 60,
+    "maxHp": 60,
+    "speed": 35,
+    "xp": 35,
+    "radius": 22,
+    "behaviors": ["MoveDown"],
+    "sprite": "boss_void",
+    "color": "#4B0082",
+    "damage": 5,
+    "isBoss": true,
+    "bossType": "mini"
+  },
+
+  // Final boss - ultimate challenge at 10 minutes
+  "ancientTitan": {
+    "hp": 500,
+    "maxHp": 5000,
+    "speed": 25,
+    "xp": 200,
+    "radius": 60,
+    "behaviors": ["MoveDown"],
+    "sprite": "boss_titan",
+    "color": "#FF0000",
+    "damage": 100,
+    "isBoss": true,
+    "bossType": "final"
+  }
 }

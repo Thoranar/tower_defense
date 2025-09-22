@@ -12,6 +12,7 @@ export type Creators = {
   weapon(key: string, level?: number): Weapon;
   projectile(key: string, x: number, y: number, vx: number, vy: number, damage: number, ownerId: number): Projectile;
   enemy(key: string, pos: Vec2): Enemy;
+  enemyFromBlueprint(key: string, blueprint: EnemyBlueprint, pos: Vec2): Enemy;
 };
 
 export function makeCreators(registry: Registry): Creators {
@@ -46,9 +47,13 @@ export function makeCreators(registry: Registry): Creators {
     },
 
     enemy(key: string, pos: Vec2): Enemy {
-      const blueprint = registry.enemies[key];
+      let blueprint = registry.enemies[key];
       if (!blueprint) {
-        throw new Error(`Unknown enemy key: ${key}`);
+        // Check bosses registry
+        blueprint = registry.bosses[key];
+        if (!blueprint) {
+          throw new Error(`Unknown enemy key: ${key}`);
+        }
       }
 
       return new Enemy({
@@ -59,7 +64,24 @@ export function makeCreators(registry: Registry): Creators {
         radius: blueprint.radius,
         behaviorKeys: blueprint.behaviors,
         color: blueprint.color,
-        pos: pos
+        pos: pos,
+        damage: blueprint.damage ?? undefined,
+        isBoss: blueprint.isBoss ?? undefined
+      });
+    },
+
+    enemyFromBlueprint(key: string, blueprint: EnemyBlueprint, pos: Vec2): Enemy {
+      return new Enemy({
+        hp: blueprint.hp,
+        maxHp: blueprint.maxHp,
+        xp: blueprint.xp,
+        speed: blueprint.speed,
+        radius: blueprint.radius,
+        behaviorKeys: blueprint.behaviors,
+        color: blueprint.color,
+        pos: pos,
+        damage: blueprint.damage ?? undefined,
+        isBoss: blueprint.isBoss ?? undefined
       });
     },
 

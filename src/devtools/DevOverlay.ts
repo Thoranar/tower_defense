@@ -109,6 +109,7 @@ export class DevOverlay {
     const actions = [
       { key: 'resetRun', label: '[R] Reset Run' },
       { key: 'spawnBasicEnemy', label: 'Spawn Basic Enemy' },
+      { key: 'spawnBossNow', label: 'Spawn Boss Now' },
       { key: 'grantXp', label: 'Grant +10 XP' },
       { key: 'clearStorage', label: '[C] Clear Storage' }
     ];

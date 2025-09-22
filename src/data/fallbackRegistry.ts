@@ -42,6 +42,40 @@ export const FALLBACK_REGISTRY: Registry = {
       color: "#FF6B6B"
     }
   },
+  bosses: {
+    shadowStalker: {
+      hp: 50,
+      maxHp: 50,
+      speed: 40,
+      xp: 25,
+      radius: 20,
+      behaviors: ["MoveDown"],
+      color: "#8B008B",
+      damage: 3,
+      isBoss: true,
+      bossType: "mini"
+    }
+  },
+  waveConfig: {
+    waves: [{
+      timeStart: 0,
+      timeEnd: 60,
+      spawnInterval: 2.0,
+      enemies: [{ key: "basic", weight: 100 }]
+    }],
+    miniBosses: {
+      enabled: false,
+      interval: 60,
+      warningTime: 10,
+      statModifiers: { hp: 1.0, damage: 0.5, speed: 0.1 },
+      pool: ["shadowStalker"]
+    },
+    finalBoss: {
+      spawnTime: 600,
+      warningTime: 30,
+      key: "shadowStalker"
+    }
+  },
   waves: [{
     timeStart: 0,
     timeEnd: 60,

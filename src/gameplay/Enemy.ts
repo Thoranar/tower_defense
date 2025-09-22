@@ -12,6 +12,8 @@ export class Enemy extends Entity {
   type: string = 'enemy';
   color: string;
   speed: number;
+  damage: number | undefined;
+  isBoss: boolean | undefined;
 
   constructor(params: {
     hp: number;
@@ -22,6 +24,8 @@ export class Enemy extends Entity {
     behaviorKeys: string[];
     color?: string;
     pos?: Vec2;
+    damage?: number | undefined;
+    isBoss?: boolean | undefined;
   }) {
     super(
       params.pos?.x || 0,
@@ -34,6 +38,8 @@ export class Enemy extends Entity {
     this.speed = params.speed;
     this.behaviorKeys = params.behaviorKeys;
     this.color = params.color || '#FF6B6B';
+    this.damage = params.damage ?? undefined;
+    this.isBoss = params.isBoss ?? undefined;
   }
 
   /** Apply damage to this enemy; returns true if killed */

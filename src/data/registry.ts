@@ -50,6 +50,9 @@ export type EnemyBlueprint = {
   behaviors: string[];
   sprite?: string;
   color: string;
+  damage?: number;
+  isBoss?: boolean;
+  bossType?: 'mini' | 'final';
 };
 
 export type WaveBlueprint = {
@@ -60,6 +63,30 @@ export type WaveBlueprint = {
     key: string;
     weight: number;
   }>;
+};
+
+export type MiniBossConfig = {
+  enabled: boolean;
+  interval: number; // Time interval between mini-boss spawns
+  warningTime: number; // Warning duration before spawn
+  statModifiers: {
+    hp: number;
+    damage: number;
+    speed: number;
+  };
+  pool: string[]; // Keys of mini-bosses to choose from
+};
+
+export type FinalBossConfig = {
+  spawnTime: number; // When final boss spawns (in seconds)
+  warningTime: number; // Warning duration before spawn
+  key: string; // Boss key to spawn
+};
+
+export type WaveConfig = {
+  waves: WaveBlueprint[];
+  miniBosses: MiniBossConfig;
+  finalBoss: FinalBossConfig;
 };
 
 export type CardBlueprint = {
@@ -142,7 +169,9 @@ export type Registry = {
   projectiles: Record<string, ProjectileBlueprint>;
   weapons: Record<string, WeaponBlueprint>;
   enemies: Record<string, EnemyBlueprint>;
-  waves: WaveBlueprint[];
+  bosses: Record<string, EnemyBlueprint>;
+  waveConfig: WaveConfig;
+  waves: WaveBlueprint[]; // For backward compatibility
   cards: Record<string, CardBlueprint>;
   upgrades: Record<string, UpgradeBlueprint>;
   scatterPatterns: ScatterPatterns;
@@ -152,10 +181,11 @@ export type Registry = {
 // Simple synchronous loader for now (async loading in later milestones)
 export async function loadRegistry(): Promise<Registry> {
   try {
-    const [projectilesResponse, weaponsResponse, enemiesResponse, wavesResponse, cardsResponse, upgradesResponse, scatterPatternsResponse, configResponse] = await Promise.all([
+    const [projectilesResponse, weaponsResponse, enemiesResponse, bossesResponse, wavesResponse, cardsResponse, upgradesResponse, scatterPatternsResponse, configResponse] = await Promise.all([
       fetch('/public/content/projectiles.json5'),
       fetch('/public/content/weapons.json5'),
       fetch('/public/content/enemies.json5'),
+      fetch('/public/content/boss.json5'),
       fetch('/public/content/waves.json5'),
       fetch('/public/content/cards.json5'),
       fetch('/public/content/upgrades.json5'),
@@ -163,14 +193,15 @@ export async function loadRegistry(): Promise<Registry> {
       fetch('/public/content/config.json5')
     ]);
 
-    if (!projectilesResponse.ok || !weaponsResponse.ok || !enemiesResponse.ok || !wavesResponse.ok || !cardsResponse.ok || !upgradesResponse.ok || !scatterPatternsResponse.ok || !configResponse.ok) {
+    if (!projectilesResponse.ok || !weaponsResponse.ok || !enemiesResponse.ok || !bossesResponse.ok || !wavesResponse.ok || !cardsResponse.ok || !upgradesResponse.ok || !scatterPatternsResponse.ok || !configResponse.ok) {
       throw new Error('Failed to load content files');
     }
 
-    const [projectilesText, weaponsText, enemiesText, wavesText, cardsText, upgradesText, scatterPatternsText, configText] = await Promise.all([
+    const [projectilesText, weaponsText, enemiesText, bossesText, wavesText, cardsText, upgradesText, scatterPatternsText, configText] = await Promise.all([
       projectilesResponse.text(),
       weaponsResponse.text(),
       enemiesResponse.text(),
+      bossesResponse.text(),
       wavesResponse.text(),
       cardsResponse.text(),
       upgradesResponse.text(),
@@ -230,7 +261,8 @@ export async function loadRegistry(): Promise<Registry> {
     const projectiles = JSON.parse(cleanJson5(projectilesText));
     const weapons = JSON.parse(cleanJson5(weaponsText));
     const enemies = JSON.parse(cleanJson5(enemiesText));
-    const waves = JSON.parse(cleanJson5(wavesText));
+    const bosses = JSON.parse(cleanJson5(bossesText));
+    const waveConfig = JSON.parse(cleanJson5(wavesText));
     const cards = JSON.parse(cleanJson5(cardsText));
     const upgrades = JSON.parse(cleanJson5(upgradesText));
     const scatterPatterns = JSON.parse(cleanJson5(scatterPatternsText));
@@ -241,7 +273,9 @@ export async function loadRegistry(): Promise<Registry> {
     console.log('- Bullet lifetime:', projectiles.bullet?.lifetime);
     console.log('- Cannon cooldown:', weapons.cannon?.baseCooldown);
     console.log('- Enemy types:', Object.keys(enemies));
-    console.log('- Wave count:', waves.length);
+    console.log('- Boss types:', Object.keys(bosses));
+    console.log('- Wave count:', waveConfig.waves?.length || 0);
+    console.log('- Mini-boss pool:', waveConfig.miniBosses?.pool || []);
     console.log('- Card types:', Object.keys(cards));
     console.log('- Upgrade types:', Object.keys(upgrades));
     console.log('- Scatter patterns:', Object.keys(scatterPatterns.patterns));
@@ -251,7 +285,9 @@ export async function loadRegistry(): Promise<Registry> {
       projectiles,
       weapons,
       enemies,
-      waves,
+      bosses,
+      waveConfig,
+      waves: waveConfig.waves || [], // For backward compatibility
       cards,
       upgrades,
       scatterPatterns,
@@ -295,6 +331,29 @@ export async function loadRegistry(): Promise<Registry> {
           radius: 12,
           behaviors: ["MoveDown"],
           color: "#FF6B6B"
+        }
+      },
+      bosses: {},
+      waveConfig: {
+        waves: [
+          {
+            timeStart: 0,
+            timeEnd: 60,
+            spawnInterval: 2.0,
+            enemies: [{ key: "basic", weight: 100 }]
+          }
+        ],
+        miniBosses: {
+          enabled: false,
+          interval: 60,
+          warningTime: 10,
+          statModifiers: { hp: 1.0, damage: 0.5, speed: 0.1 },
+          pool: []
+        },
+        finalBoss: {
+          spawnTime: 600,
+          warningTime: 30,
+          key: "ancientTitan"
         }
       },
       waves: [

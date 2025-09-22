@@ -74,6 +74,11 @@ export class World {
     return this.entities.size;
   }
 
+  /** Check if entity exists in world */
+  has(entity: Entity): boolean {
+    return this.entities.has(entity);
+  }
+
   /** Clear all entities */
   clear(): void {
     this.entities.clear();

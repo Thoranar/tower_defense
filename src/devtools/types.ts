@@ -24,6 +24,7 @@ export type ActionKey =
   | 'resetRun'
   | 'spawnEnemy'
   | 'spawnBoss'
+  | 'spawnBossNow'
   | 'grantXp'
   | 'equipWeapon'
   | 'forceEndRun'
