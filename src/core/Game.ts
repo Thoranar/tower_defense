@@ -23,6 +23,9 @@ import { CardDraftSystem } from '../systems/CardDraftSystem.js';
 import { UpgradeSystem } from '../systems/UpgradeSystem.js';
 import { BossSystem } from '../systems/BossSystem.js';
 import { CardOverlayView } from '../ui/CardOverlayView.js';
+import { GameOverScreen } from '../ui/GameOverScreen.js';
+import { MainMenuScreen } from '../ui/MainMenuScreen.js';
+import { PrestigeSystem, RunStats, GameScore } from '../systems/PrestigeSystem.js';
 import { EventBus } from './EventBus.js';
 
 // Main game loop; orchestrates systems and updates world
@@ -45,7 +48,12 @@ export class Game {
   private animationId: number = 0;
   private inRun: boolean = false;
   private gamePaused: boolean = false;
+  private gameState: 'menu' | 'playing' | 'paused' | 'game_over' = 'menu';
+  private runStats: RunStats;
   private bus: EventBus;
+  private prestigeSystem: PrestigeSystem;
+  private gameOverScreen: GameOverScreen;
+  private mainMenuScreen: MainMenuScreen;
 
   // Game systems
   private spawnSystem: SpawnSystem | null = null;
@@ -78,6 +86,10 @@ export class Game {
     this.hud = new Hud();
     this.bus = new EventBus();
     this.cardOverlay = new CardOverlayView(this.uiRenderer, canvas.width, canvas.height);
+    this.prestigeSystem = new PrestigeSystem();
+    this.gameOverScreen = new GameOverScreen(this.uiRenderer, canvas.width, canvas.height);
+    this.mainMenuScreen = new MainMenuScreen(this.uiRenderer, canvas.width, canvas.height);
+    this.runStats = this.initializeRunStats();
   }
 
   async init(): Promise<void> {
@@ -108,13 +120,38 @@ export class Game {
       this.resumeGame();
     });
 
+    // Listen for run-ending events
+    this.bus.on('TowerDestroyed', () => {
+      this.endRun('death');
+    });
+
+    this.bus.on('BossReachedGround', () => {
+      this.endRun('boss_ground');
+    });
+
+    this.bus.on('EnemyKilled', (data: any) => {
+      this.runStats.enemiesKilled++;
+    });
+
+    this.bus.on('BossDefeated', (data: any) => {
+      if (data.bossType === 'final') {
+        this.runStats.finalBossDefeated = true;
+        // Final boss defeat = victory
+        this.endRun('victory');
+      } else {
+        this.runStats.miniBossesDefeated++;
+      }
+    });
+
     // Register DevTools actions
     this.devTools.registerGameActions({
       resetRun: () => this.resetRun(),
       spawnBasicEnemy: () => this.spawnEnemyManually('basic', 1),
       spawnBossNow: () => this.spawnBossManually('shadowStalker'),
       grantXp: () => this.grantXpManually(10),
-      getUpgradeState: () => this.upgradeSystem?.getUpgradeState() || { levels: {}, slots: { used: 0, max: 5 }, canSelectAny: false }
+      getUpgradeState: () => this.upgradeSystem?.getUpgradeState() || { levels: {}, slots: { used: 0, max: 5 }, canSelectAny: false },
+      forceEndRun: () => this.endRun('death'),
+      clearLocalStorage: () => this.prestigeSystem.resetMetaData()
     });
 
     // Register parameterized actions separately
@@ -126,7 +163,7 @@ export class Game {
       this.devTools.setAvailableUpgrades(availableUpgrades);
     }
 
-    this.startRun(); // Auto-start a run for milestone 3
+    this.showMainMenu(); // Start with main menu for milestone 9
     console.log('Game initialized');
   }
 
@@ -154,7 +191,8 @@ export class Game {
 
     this.movementSystem = new MovementSystem({
       world: this.world,
-      reg: this.registry
+      reg: this.registry,
+      bus: this.bus
     });
 
     this.collisionSystem = new CollisionSystem({
@@ -235,7 +273,10 @@ export class Game {
     // Update DevTools overlay
     this.devOverlay.update(deltaTime);
 
-    if (this.inRun && !this.gamePaused) {
+    if (this.gameState === 'playing' && this.inRun && !this.gamePaused) {
+      // Update run stats (time survived)
+      this.runStats.timeSurvived = this.clock.getElapsedTime();
+
       // Update tower system (input, firing, tower state)
       if (this.towerSystem) {
         const fireRateMultiplier = this.devTools.getSlider('fireRateMult');
@@ -264,10 +305,39 @@ export class Game {
     const cardClicked = this.cardOverlay.handleClick(mouseClick.x, mouseClick.y);
     if (cardClicked && this.cardDraftSystem) {
       this.cardDraftSystem.choose(cardClicked);
-    } else {
-      // Check dev overlay if no card was clicked
-      this.devOverlay.handleClick(mouseClick.x, mouseClick.y);
+      return;
     }
+
+    // Check game over screen
+    if (this.gameState === 'game_over') {
+      const gameOverAction = this.gameOverScreen.handleClick(mouseClick.x, mouseClick.y);
+      if (gameOverAction === 'restart') {
+        this.startRun();
+      } else if (gameOverAction === 'menu') {
+        this.showMainMenu();
+      }
+      return;
+    }
+
+    // Check main menu
+    if (this.gameState === 'menu') {
+      const menuAction = this.mainMenuScreen.handleClick(mouseClick.x, mouseClick.y);
+      if (menuAction === 'start') {
+        this.startRun();
+      } else if (menuAction === 'prestige_store') {
+        // TODO: Implement prestige store
+        console.log('Prestige store coming soon!');
+      } else if (menuAction === 'reset') {
+        if (confirm('Are you sure you want to reset all progress?')) {
+          this.prestigeSystem.resetMetaData();
+          this.showMainMenu(); // Refresh the menu
+        }
+      }
+      return;
+    }
+
+    // Check dev overlay if no other UI was clicked
+    this.devOverlay.handleClick(mouseClick.x, mouseClick.y);
   }
 
   /**
@@ -327,6 +397,13 @@ export class Game {
     // Render debug overlays and info (delegated to DevOverlay)
     this.renderDebugOverlays();
 
+    // Render overlays based on game state
+    if (this.gameState === 'menu') {
+      this.mainMenuScreen.render();
+    } else if (this.gameState === 'game_over') {
+      this.gameOverScreen.render();
+    }
+
     // Render card overlay (on top of everything)
     this.cardOverlay.render();
 
@@ -373,6 +450,12 @@ export class Game {
 
     console.log('Starting new run');
 
+    // Hide all screens and reset state
+    this.gameOverScreen.hide();
+    this.mainMenuScreen.hide();
+    this.gameState = 'playing';
+    this.runStats = this.initializeRunStats();
+
     // Clear world and create tower at bottom center
     this.world.clear();
     const centerX = this.canvas.width / 2;
@@ -412,8 +495,20 @@ export class Game {
   }
 
   endRun(reason: "death" | "boss_ground" | "victory"): void {
+    if (!this.inRun) return; // Prevent double-ending
+
     console.log(`Run ended: ${reason}`);
     this.inRun = false;
+    this.gameState = 'game_over';
+
+    // Finalize run stats
+    this.runStats.endReason = reason;
+    this.runStats.timeSurvived = this.clock.getElapsedTime();
+
+    // Calculate score and show game over screen
+    const gameScore = this.prestigeSystem.endRun(this.runStats);
+    this.gameOverScreen.show(gameScore);
+
     this.world.clear();
   }
 
@@ -492,6 +587,8 @@ export class Game {
 
     this.devOverlay.resize(width, height);
     this.cardOverlay.resize(width, height);
+    this.gameOverScreen.resize(width, height);
+    this.mainMenuScreen.resize(width, height);
   }
 
   /** Pause the game (stops all game system updates but keeps rendering) */
@@ -511,5 +608,25 @@ export class Game {
   /** Check if the game is currently paused */
   isPaused(): boolean {
     return this.gamePaused;
+  }
+
+  /** Show the main menu */
+  showMainMenu(): void {
+    this.gameState = 'menu';
+    this.gameOverScreen.hide();
+    const metaData = this.prestigeSystem.getMetaData();
+    this.mainMenuScreen.show(metaData);
+    console.log('Showing main menu');
+  }
+
+  /** Initialize run stats for a new run */
+  private initializeRunStats(): RunStats {
+    return {
+      timeSurvived: 0,
+      enemiesKilled: 0,
+      miniBossesDefeated: 0,
+      finalBossDefeated: false,
+      endReason: 'death'
+    };
   }
 }

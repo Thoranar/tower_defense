@@ -28,6 +28,7 @@ export class BossSystem {
   private nextMiniBossWave: number = 1;
   private finalBossSpawned: boolean = false;
   private activeBoss: Enemy | null = null;
+  private activeBossType: 'mini' | 'final' | null = null;
   private currentWarning: BossWarning | null = null;
   private isSpawningBoss: boolean = false;
 
@@ -46,9 +47,11 @@ export class BossSystem {
 
     // Check if current boss is still alive
     if (this.activeBoss && !this.world.has(this.activeBoss)) {
+      const bossType = this.activeBossType;
       this.activeBoss = null;
+      this.activeBossType = null;
       this.isSpawningBoss = false;
-      this.eventBus.emit('bossDefeated' as any, { type: 'boss' });
+      this.eventBus.emit('BossDefeated', { bossType: bossType });
     }
 
     // Handle mini-boss spawning
@@ -138,6 +141,7 @@ export class BossSystem {
 
       this.world.add(boss);
       this.activeBoss = boss;
+      this.activeBossType = bossType;
 
       // Update state based on boss type
       if (bossType === 'mini') {
@@ -221,6 +225,7 @@ export class BossSystem {
     this.nextMiniBossWave = 1;
     this.finalBossSpawned = false;
     this.activeBoss = null;
+    this.activeBossType = null;
     this.currentWarning = null;
     this.isSpawningBoss = false;
   }

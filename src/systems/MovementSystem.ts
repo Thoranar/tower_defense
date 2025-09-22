@@ -6,14 +6,17 @@ import { World } from '../core/World.js';
 import { Enemy } from '../gameplay/Enemy.js';
 import { Registry } from '../data/registry.js';
 import { MoveDown } from '../gameplay/behaviors/MoveDown.js';
+import { EventBus } from '../core/EventBus.js';
 
 export class MovementSystem {
   private world: World;
   private registry: Registry;
+  private bus: EventBus | null = null;
 
-  constructor(args: { world: World; reg: Registry }) {
+  constructor(args: { world: World; reg: Registry; bus?: EventBus }) {
     this.world = args.world;
     this.registry = args.reg;
+    this.bus = args.bus || null;
   }
 
   /** Integrate positions by velocity; apply behavior updates */
@@ -28,8 +31,15 @@ export class MovementSystem {
       entity.pos.x += entity.vel.x * dt;
       entity.pos.y += entity.vel.y * dt;
 
-      // Remove entities that fall off screen
+      // Handle entities that reach the ground
       if (entity.pos.y > 800) { // TODO: Get from viewport
+        if (entity instanceof Enemy && this.isBoss(entity)) {
+          // Boss reaching ground ends the run
+          if (this.bus) {
+            this.bus.emit('BossReachedGround', { boss: entity });
+          }
+          console.log('Boss reached the ground! Game over.');
+        }
         entity.alive = false;
       }
     }
@@ -46,5 +56,11 @@ export class MovementSystem {
           console.warn(`Unknown behavior: ${behaviorKey}`);
       }
     }
+  }
+
+  /** Check if an enemy is a boss */
+  private isBoss(enemy: Enemy): boolean {
+    // Use the isBoss flag that's set during enemy creation
+    return enemy.isBoss === true;
   }
 }

@@ -97,7 +97,9 @@ export class Tower extends Entity {
 
     if (this.stats.hp <= 0) {
       console.log('Tower destroyed!');
-      // Game end logic will be handled in future milestones
+      if (this.bus) {
+        this.bus.emit('TowerDestroyed', { tower: this });
+      }
     }
   }
 

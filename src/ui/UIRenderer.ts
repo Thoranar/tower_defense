@@ -27,6 +27,11 @@ export class UIRenderer {
     this.height = height;
   }
 
+  /** Get the canvas context for direct rendering */
+  getContext(): CanvasRenderingContext2D {
+    return this.ctx;
+  }
+
   drawFPS(fps: number): void {
     this.ctx.fillStyle = '#ffffff';
     this.ctx.font = '14px monospace';
