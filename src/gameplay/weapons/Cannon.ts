@@ -19,44 +19,63 @@ export class Cannon extends Weapon {
       return [];
     }
 
-    // Calculate muzzle position (end of barrel)
-    const muzzleX = ctx.origin.x + ctx.direction.x * this.barrelLength;
-    const muzzleY = ctx.origin.y + ctx.direction.y * this.barrelLength;
+    const projectiles: Projectile[] = [];
 
-    // Get projectile speed and radius from tower stats (already upgraded values)
-    const speed = ctx.towerStats?.projectileStats?.speed ?? 400;
-    const radius = ctx.towerStats?.projectileStats?.radius ?? 3;
+    // Get scatter pattern from weapon blueprint
+    const scatterLevel = this.blueprint.scatterPattern;
+    const scatterPatterns = ctx.creators.registry?.scatterPatterns?.patterns;
 
+    let scatterAngles = [0]; // Default single shot
+    if (scatterPatterns && scatterPatterns[scatterLevel.toString()]) {
+      const pattern = scatterPatterns[scatterLevel.toString()];
+      scatterAngles = pattern.angles.map((angleDegrees: number) => angleDegrees * Math.PI / 180);
+    }
 
-    // Calculate velocity based on direction and speed
-    const vx = ctx.direction.x * speed;
-    const vy = ctx.direction.y * speed;
+    // Get projectile speed and radius from projectile blueprint (projectile-based properties)
+    const projectileBlueprint = ctx.creators.registry?.projectiles[this.projectileKey];
+    const speed = projectileBlueprint?.speed ?? 400;
+    const radius = projectileBlueprint?.radius ?? 3;
 
-    // Get damage from tower stats (already upgraded value)
+    // Calculate weapon damage multiplier
+    const weaponDamageMultiplier = this.blueprint.damageMultiplier;
     const baseDamage = this.blueprint.baseUpgradeStats.damage;
-    const damage = ctx.towerStats?.damage ?? baseDamage;
+    const towerDamage = ctx.towerStats?.damage ?? baseDamage;
+    const finalDamageMultiplier = weaponDamageMultiplier * (towerDamage / baseDamage);
 
-    // Get piercing stats from tower
-    const piercing = ctx.towerStats?.projectileStats?.piercing ?? false;
-    const maxHits = ctx.towerStats?.projectileStats?.maxHits ?? 1;
+    // Fire projectile for each scatter angle
+    for (const angleOffset of scatterAngles) {
+      // Calculate new direction with angle offset
+      const currentAngle = Math.atan2(ctx.direction.y, ctx.direction.x) + angleOffset;
+      const scatterDirection = {
+        x: Math.cos(currentAngle),
+        y: Math.sin(currentAngle)
+      };
 
-    // Create projectile using creators (which will use registry data)
-    const projectile = ctx.creators.projectile(
-      this.projectileKey,
-      muzzleX,
-      muzzleY,
-      vx,
-      vy,
-      damage,
-      ctx.ownerId,
-      piercing,
-      maxHits,
-      radius
-    );
+      // Calculate muzzle position (end of barrel)
+      const muzzleX = ctx.origin.x + scatterDirection.x * this.barrelLength;
+      const muzzleY = ctx.origin.y + scatterDirection.y * this.barrelLength;
+
+      // Calculate velocity based on scatter direction and speed
+      const vx = scatterDirection.x * speed;
+      const vy = scatterDirection.y * speed;
+
+      // Create projectile using creators (uses blueprint data)
+      const projectile = ctx.creators.projectile(
+        this.projectileKey,
+        muzzleX,
+        muzzleY,
+        vx,
+        vy,
+        finalDamageMultiplier,
+        ctx.ownerId
+      );
+
+      projectiles.push(projectile);
+    }
 
     // Reset cooldown with fire rate multiplier applied
     this.resetCooldown(fireRateMultiplier);
 
-    return [projectile];
+    return projectiles;
   }
 }

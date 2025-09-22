@@ -4,8 +4,8 @@
 {
   // Mini-boss pool - randomly selected and scaled based on wave
   "shadowStalker": {
-    "hp": 50,
-    "maxHp": 50,
+    "hp": 200,
+    "maxHp": 5000,
     "speed": 40,
     "xp": 25,
     "radius": 20,
@@ -17,8 +17,8 @@
     "bossType": "mini"
   },
   "ironGuard": {
-    "hp": 80,
-    "maxHp": 80,
+    "hp": 400,
+    "maxHp": 8000,
     "speed": 25,
     "xp": 30,
     "radius": 25,
@@ -30,8 +30,8 @@
     "bossType": "mini"
   },
   "voidReaper": {
-    "hp": 60,
-    "maxHp": 60,
+    "hp": 300,
+    "maxHp": 6000,
     "speed": 35,
     "xp": 35,
     "radius": 22,
@@ -45,8 +45,8 @@
 
   // Final boss - ultimate challenge at 10 minutes
   "ancientTitan": {
-    "hp": 500,
-    "maxHp": 5000,
+    "hp": 1000,
+    "maxHp": 10000,
     "speed": 25,
     "xp": 200,
     "radius": 60,

@@ -5,10 +5,13 @@
   // Base cannon weapon for tower defense
   "cannon": {
     "name": "Cannon",
-    "description": "Standard tower cannon that fires upward",
+    "description": "Standard tower cannon that fires single bullets",
     "type": "cannon",
     "projectileKey": "bullet",
     "baseCooldown": 1.0,  // seconds between shots
+    "baseFireRate": 1.0,  // shots per second
+    "damageMultiplier": 1.0, // multiplier applied to projectile base damage
+    "scatterPattern": 0,  // scatter level (0 = single shot)
     "baseUpgradeStats": {
       "damage": 10,
       "fireRate": 1.0,
@@ -21,5 +24,77 @@
     },
     "maxLevel": 5,
     "rarity": "common"
+  },
+
+  // Rapid-fire weapon variant
+  "rapidCannon": {
+    "name": "Rapid Cannon",
+    "description": "Fast-firing cannon with reduced damage per shot",
+    "type": "cannon",
+    "projectileKey": "bullet",
+    "baseCooldown": 0.4,  // faster firing
+    "baseFireRate": 2.5,  // 2.5 shots per second
+    "damageMultiplier": 0.7, // less damage per shot
+    "scatterPattern": 0,
+    "baseUpgradeStats": {
+      "damage": 7,
+      "fireRate": 2.5,
+      "range": 250
+    },
+    "levelScaling": {
+      "damage": 1.15,
+      "fireRate": 1.2,
+      "range": 1.03
+    },
+    "maxLevel": 5,
+    "rarity": "uncommon"
+  },
+
+  // Scatter shot weapon
+  "scatterCannon": {
+    "name": "Scatter Cannon",
+    "description": "Fires multiple projectiles in a spread pattern",
+    "type": "cannon",
+    "projectileKey": "bullet",
+    "baseCooldown": 1.5,  // slower than basic
+    "baseFireRate": 0.67, // about 2/3 shots per second
+    "damageMultiplier": 0.8, // slightly less damage per projectile
+    "scatterPattern": 2,  // triple shot pattern
+    "baseUpgradeStats": {
+      "damage": 8,
+      "fireRate": 0.67,
+      "range": 280
+    },
+    "levelScaling": {
+      "damage": 1.25,
+      "fireRate": 1.15,
+      "range": 1.04
+    },
+    "maxLevel": 5,
+    "rarity": "rare"
+  },
+
+  // Heavy weapon with explosive shells
+  "heavyCannon": {
+    "name": "Heavy Cannon",
+    "description": "Powerful cannon firing explosive shells",
+    "type": "cannon",
+    "projectileKey": "explosiveShell",
+    "baseCooldown": 2.0,  // much slower
+    "baseFireRate": 0.5,  // 1 shot every 2 seconds
+    "damageMultiplier": 1.5, // higher damage multiplier
+    "scatterPattern": 0,
+    "baseUpgradeStats": {
+      "damage": 15,
+      "fireRate": 0.5,
+      "range": 350
+    },
+    "levelScaling": {
+      "damage": 1.3,
+      "fireRate": 1.05,
+      "range": 1.06
+    },
+    "maxLevel": 3,
+    "rarity": "legendary"
   }
 }

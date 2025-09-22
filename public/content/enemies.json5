@@ -3,8 +3,8 @@
 // Data-driven enemy configuration for flexible content authoring
 {
   "basic": {
-    "hp": 3,
-    "maxHp": 3,
+    "hp": 10,
+    "maxHp": 60,
     "speed": 60,
     "xp": 1,
     "radius": 12,
@@ -13,8 +13,8 @@
     "color": "#FF6B6B"
   },
   "fast": {
-    "hp": 2,
-    "maxHp": 2,
+    "hp": 8,
+    "maxHp": 48,
     "speed": 90,
     "xp": 2,
     "radius": 10,
@@ -23,8 +23,8 @@
     "color": "#4ECDC4"
   },
   "heavy": {
-    "hp": 8,
-    "maxHp": 8,
+    "hp": 50,
+    "maxHp": 300,
     "speed": 30,
     "xp": 3,
     "radius": 16,
@@ -33,8 +33,8 @@
     "color": "#45B7D1"
   },
   "scout": {
-    "hp": 1,
-    "maxHp": 1,
+    "hp": 5,
+    "maxHp": 30,
     "speed": 120,
     "xp": 1,
     "radius": 8,

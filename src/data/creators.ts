@@ -10,7 +10,7 @@ import { Vec2 } from '../gameplay/Entity.js';
 // Only way to create game objects; prevents hardcoded values
 export type Creators = {
   weapon(key: string, level?: number): Weapon;
-  projectile(key: string, x: number, y: number, vx: number, vy: number, damage: number, ownerId: number, piercing?: boolean, maxHits?: number, radius?: number): Projectile;
+  projectile(key: string, x: number, y: number, vx: number, vy: number, damageMultiplier: number, ownerId: number, piercing?: boolean, maxHits?: number, radius?: number): Projectile;
   enemy(key: string, pos: Vec2): Enemy;
   enemyFromBlueprint(key: string, blueprint: EnemyBlueprint, pos: Vec2): Enemy;
 };
@@ -31,19 +31,28 @@ export function makeCreators(registry: Registry): Creators {
       }
     },
 
-    projectile(key: string, x: number, y: number, vx: number, vy: number, damage: number, ownerId: number, piercing?: boolean, maxHits?: number, radius?: number): Projectile {
+    projectile(key: string, x: number, y: number, vx: number, vy: number, damageMultiplier: number, ownerId: number, piercing?: boolean, maxHits?: number, radius?: number): Projectile {
       const blueprint = registry.projectiles[key];
       if (!blueprint) {
         throw new Error(`Unknown projectile key: ${key}`);
       }
 
-      return new Projectile(
-        x, y, vx, vy, damage, ownerId,
-        blueprint.lifetime,
-        radius ?? blueprint.radius,
-        piercing ?? blueprint.physics?.piercing ?? false,
-        maxHits ?? 1
-      );
+      // Use blueprint-based creation for new projectiles
+      if (!piercing && !maxHits && !radius) {
+        // Use full blueprint if no overrides specified
+        return Projectile.fromBlueprint(blueprint, x, y, vx, vy, damageMultiplier, ownerId);
+      } else {
+        // Legacy mode with overrides for backward compatibility
+        return new Projectile(
+          x, y, vx, vy,
+          blueprint.baseDamage * damageMultiplier,
+          ownerId,
+          blueprint.lifetime,
+          radius ?? blueprint.radius,
+          piercing ?? blueprint.physics?.piercing ?? false,
+          maxHits ?? blueprint.physics?.maxHits ?? 1
+        );
+      }
     },
 
     enemy(key: string, pos: Vec2): Enemy {

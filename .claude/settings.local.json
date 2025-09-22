@@ -15,7 +15,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:thoranar.github.io)",
       "Bash(curl:*)",
-      "Bash(npm run watch-content:*)"
+      "Bash(npm run watch-content:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

@@ -26,7 +26,22 @@ export class TowerSystem {
     this.creators = args.creators;
     this.bus = args.bus;
 
-    // Scatter shots are handled directly in fireWeapons, no event needed
+    // Listen for weapon management events
+    this.bus.on('EquipWeapon', (data: any) => {
+      this.handleEquipWeapon(data);
+    });
+
+    this.bus.on('UpgradeWeapon', (data: any) => {
+      this.handleUpgradeWeapon(data);
+    });
+
+    this.bus.on('SwitchProjectile', (data: any) => {
+      this.handleSwitchProjectile(data);
+    });
+
+    this.bus.on('AddWeaponSlot', (data: any) => {
+      this.handleAddWeaponSlot(data);
+    });
   }
 
   /**
@@ -92,5 +107,113 @@ export class TowerSystem {
    */
   getTowerForDisplay(): Tower | null {
     return this.getTower();
+  }
+
+  /**
+   * Handle equipping a weapon to the tower
+   */
+  private handleEquipWeapon(data: { weaponKey: string; level: number; slot?: number }): void {
+    const tower = this.getTower();
+    if (!tower) {
+      console.warn('Cannot equip weapon: no tower found');
+      return;
+    }
+
+    try {
+      // Create the weapon using creators
+      const weapon = this.creators.weapon(data.weaponKey, data.level);
+
+      // Determine which slot to use
+      const slot = data.slot || 0;
+
+      // Replace weapon in slot or add if slot doesn't exist yet
+      if (slot < tower.weapons.length) {
+        tower.weapons[slot] = weapon;
+        console.log(`Replaced weapon in slot ${slot} with ${data.weaponKey} level ${data.level}`);
+      } else if (slot === tower.weapons.length) {
+        tower.addWeapon(weapon);
+        console.log(`Added ${data.weaponKey} level ${data.level} to new slot ${slot}`);
+      } else {
+        console.warn(`Cannot equip weapon: slot ${slot} is too far ahead (max slot: ${tower.weapons.length})`);
+        return;
+      }
+
+    } catch (error) {
+      console.error(`Failed to create or equip weapon ${data.weaponKey}:`, error);
+    }
+  }
+
+  /**
+   * Handle upgrading an existing weapon
+   */
+  private handleUpgradeWeapon(data: { slot: number; levelIncrease: number }): void {
+    const tower = this.getTower();
+    if (!tower) {
+      console.warn('Cannot upgrade weapon: no tower found');
+      return;
+    }
+
+    const slot = data.slot;
+    if (slot >= tower.weapons.length) {
+      console.warn(`Cannot upgrade weapon: slot ${slot} does not exist (max slot: ${tower.weapons.length - 1})`);
+      return;
+    }
+
+    const weapon = tower.weapons[slot];
+    if (!weapon) {
+      console.warn(`Cannot upgrade weapon: no weapon in slot ${slot}`);
+      return;
+    }
+
+    // Increase weapon level
+    weapon.level += data.levelIncrease;
+    console.log(`Upgraded weapon in slot ${slot} to level ${weapon.level}`);
+  }
+
+  /**
+   * Handle switching projectile type for a weapon
+   */
+  private handleSwitchProjectile(data: { weaponSlot: number; projectileKey: string }): void {
+    const tower = this.getTower();
+    if (!tower) {
+      console.warn('Cannot switch projectile: no tower found');
+      return;
+    }
+
+    const slot = data.weaponSlot;
+    if (slot >= tower.weapons.length) {
+      console.warn(`Cannot switch projectile: weapon slot ${slot} does not exist`);
+      return;
+    }
+
+    const weapon = tower.weapons[slot];
+    if (!weapon) {
+      console.warn(`Cannot switch projectile: no weapon in slot ${slot}`);
+      return;
+    }
+
+    // Update weapon's projectile key
+    weapon.projectileKey = data.projectileKey;
+    console.log(`Switched weapon in slot ${slot} to use projectile: ${data.projectileKey}`);
+  }
+
+  /**
+   * Handle adding additional weapon slots
+   */
+  private handleAddWeaponSlot(data: { count: number }): void {
+    const tower = this.getTower();
+    if (!tower) {
+      console.warn('Cannot add weapon slot: no tower found');
+      return;
+    }
+
+    // For now, just log that additional slots would be available
+    // In a more complex system, this might increase a maxWeapons property
+    const currentSlots = tower.weapons.length;
+    const newCapacity = currentSlots + data.count;
+    console.log(`Tower weapon capacity expanded from ${currentSlots} to ${newCapacity} slots`);
+
+    // Note: The actual slot expansion happens when weapons are equipped
+    // The tower.weapons array automatically grows as needed
   }
 }

@@ -6,6 +6,7 @@
   "bullet": {
     "name": "Bullet",
     "description": "Standard projectile fired by cannon",
+    "baseDamage": 10,     // base damage before weapon multipliers
     "speed": 400,         // pixels per second
     "lifetime": 3.0,      // seconds before auto-despawn
     "radius": 6,          // collision radius in pixels
@@ -16,12 +17,72 @@
     },
     "physics": {
       "piercing": false,  // destroyed on first hit
+      "maxHits": 1,       // how many enemies can be hit (piercing)
       "gravity": false,   // unaffected by gravity
-      "bounce": false     // no bouncing
+      "bounce": false,    // no bouncing
+      "bounceCount": 0    // max number of bounces
     },
     "effects": {
       "trail": false,     // no visual trail
-      "explosion": false  // no explosion on impact
+      "explosion": false, // no explosion on impact
+      "explosionRadius": 0, // radius of explosion if enabled
+      "explosionDamage": 0  // damage multiplier for explosion
+    }
+  },
+
+  // Piercing bullet for upgraded weapons
+  "piercingBullet": {
+    "name": "Piercing Bullet",
+    "description": "Bullet that can pierce through multiple enemies",
+    "baseDamage": 8,      // slightly less base damage
+    "speed": 450,         // faster than regular bullet
+    "lifetime": 4.0,      // longer lifetime for piercing
+    "radius": 5,
+    "visual": {
+      "type": "circle",
+      "color": "#00ff88", // green
+      "size": 5
+    },
+    "physics": {
+      "piercing": true,
+      "maxHits": 3,       // can hit 3 enemies
+      "gravity": false,
+      "bounce": false,
+      "bounceCount": 0
+    },
+    "effects": {
+      "trail": true,      // has visual trail
+      "explosion": false,
+      "explosionRadius": 0,
+      "explosionDamage": 0
+    }
+  },
+
+  // Explosive shell for heavy weapons
+  "explosiveShell": {
+    "name": "Explosive Shell",
+    "description": "Heavy projectile with area damage on impact",
+    "baseDamage": 15,
+    "speed": 300,         // slower but more powerful
+    "lifetime": 5.0,
+    "radius": 8,          // larger projectile
+    "visual": {
+      "type": "circle",
+      "color": "#ff4444", // red
+      "size": 8
+    },
+    "physics": {
+      "piercing": false,
+      "maxHits": 1,
+      "gravity": false,
+      "bounce": false,
+      "bounceCount": 0
+    },
+    "effects": {
+      "trail": false,
+      "explosion": true,
+      "explosionRadius": 50, // 50 pixel explosion radius
+      "explosionDamage": 0.7 // 70% of projectile damage to nearby enemies
     }
   }
 }

@@ -93,6 +93,9 @@ export class SpawnSystem {
     try {
       const enemy = this.creators.enemy(enemyKey, spawnPos);
 
+      // Apply HP scaling based on game progression
+      this.applyHPScaling(enemy, enemyKey);
+
       // Initialize movement behavior
       if (enemy.behaviorKeys.includes('MoveDown')) {
         MoveDown.initialize(enemy, enemy.speed);
@@ -102,6 +105,39 @@ export class SpawnSystem {
     } catch (error) {
       console.warn(`Failed to spawn enemy ${enemyKey}:`, error);
     }
+  }
+
+  private applyHPScaling(enemy: any, enemyKey: string): void {
+    // Get the enemy blueprint to access base and max HP
+    let blueprint = this.registry.enemies[enemyKey];
+    if (!blueprint) {
+      blueprint = this.registry.bosses[enemyKey];
+      if (!blueprint) {
+        return; // Unknown enemy, skip scaling
+      }
+    }
+
+    // Calculate discrete scaling step based on 60-second intervals
+    const currentTime = this.clock.getElapsedTime();
+    const scalingInterval = 60; // Scale every 60 seconds
+    const gameDuration = 600; // 10 minutes total game time
+    const totalSteps = gameDuration / scalingInterval; // 10 steps total
+
+    // Get current step (0-9 for a 10-minute game)
+    const currentStep = Math.floor(currentTime / scalingInterval);
+    const clampedStep = Math.min(currentStep, totalSteps - 1);
+
+    // Calculate scaling factor based on discrete steps
+    const scalingFactor = clampedStep / (totalSteps - 1);
+
+    // Interpolate between base HP and max HP
+    const baseHp = blueprint.hp;
+    const maxHp = blueprint.maxHp;
+    const scaledHp = baseHp + (maxHp - baseHp) * scalingFactor;
+
+    // Apply the scaled HP to the enemy
+    enemy.hp = Math.round(scaledHp);
+    enemy.maxHp = Math.round(scaledHp); // Update maxHp to match current scaled HP
   }
 
   private selectEnemyType(wave: WaveBlueprint): string | null {

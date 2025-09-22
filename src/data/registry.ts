@@ -2,6 +2,7 @@
 export type ProjectileBlueprint = {
   name: string;
   description: string;
+  baseDamage: number;
   speed: number;
   lifetime: number;
   radius: number;
@@ -12,12 +13,16 @@ export type ProjectileBlueprint = {
   };
   physics: {
     piercing: boolean;
+    maxHits: number;
     gravity: boolean;
     bounce: boolean;
+    bounceCount: number;
   };
   effects: {
     trail: boolean;
     explosion: boolean;
+    explosionRadius: number;
+    explosionDamage: number;
   };
 };
 
@@ -27,6 +32,9 @@ export type WeaponBlueprint = {
   type: string;
   projectileKey: string;
   baseCooldown: number;
+  baseFireRate: number;
+  damageMultiplier: number;
+  scatterPattern: number;
   baseUpgradeStats: {
     damage: number;
     fireRate: number;
@@ -102,10 +110,12 @@ export type CardBlueprint = {
 };
 
 export type UpgradeEffect = {
-  op: 'statAdd' | 'statMult' | 'statSet' | 'equipWeapon';
+  op: 'statAdd' | 'statMult' | 'statSet' | 'equipWeapon' | 'upgradeWeapon' | 'switchProjectile' | 'addWeaponSlot';
   target?: string;
   value?: number | boolean;
   weaponKey?: string;
+  projectileKey?: string;
+  weaponSlot?: number; // which weapon slot to target
   level?: number;
 };
 
@@ -301,12 +311,13 @@ export async function loadRegistry(): Promise<Registry> {
         bullet: {
           name: "Bullet",
           description: "Standard projectile",
+          baseDamage: 10,
           speed: 400,
           lifetime: 3.0,
           radius: 3,
           visual: { type: "circle", color: "#ffff00", size: 6 },
-          physics: { piercing: false, gravity: false, bounce: false },
-          effects: { trail: false, explosion: false }
+          physics: { piercing: false, maxHits: 1, gravity: false, bounce: false, bounceCount: 0 },
+          effects: { trail: false, explosion: false, explosionRadius: 0, explosionDamage: 0 }
         }
       },
       weapons: {
@@ -316,6 +327,9 @@ export async function loadRegistry(): Promise<Registry> {
           type: "cannon",
           projectileKey: "bullet",
           baseCooldown: 1.0,
+          baseFireRate: 1.0,
+          damageMultiplier: 1.0,
+          scatterPattern: 0,
           baseUpgradeStats: { damage: 10, fireRate: 1.0, range: 300 },
           levelScaling: { damage: 1.2, fireRate: 1.1, range: 1.05 },
           maxLevel: 5,

@@ -7,9 +7,7 @@ export type FireContext = {
   direction: Vec2;
   creators: any; // TODO: type this properly when creators are implemented
   towerStats?: {
-    damage: number;
-    weaponStats: any;
-    projectileStats: any;
+    damage: number; // base damage multiplier from tower
   };
 };
 

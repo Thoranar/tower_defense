@@ -96,7 +96,7 @@ export class UpgradeSystem {
 
   /** Apply a single upgrade effect operation. */
   private applyEffect(effect: UpgradeEffect): void {
-    console.log(`Applying effect: ${effect.op} ${effect.target} ${effect.value}`);
+    console.log(`Applying effect: ${effect.op} ${effect.target || effect.weaponKey || effect.projectileKey} ${effect.value}`);
 
     switch (effect.op) {
       case 'statAdd':
@@ -110,6 +110,15 @@ export class UpgradeSystem {
         break;
       case 'equipWeapon':
         this.applyEquipWeapon(effect);
+        break;
+      case 'upgradeWeapon':
+        this.applyUpgradeWeapon(effect);
+        break;
+      case 'switchProjectile':
+        this.applySwitchProjectile(effect);
+        break;
+      case 'addWeaponSlot':
+        this.applyAddWeaponSlot(effect);
         break;
       default:
         console.warn(`Unknown upgrade operation: ${effect.op}`);
@@ -156,10 +165,42 @@ export class UpgradeSystem {
     if (!effect.weaponKey) return;
 
     const level = effect.level || 1;
+    const slot = effect.weaponSlot || 0; // Default to first slot
 
     this.bus.emit('EquipWeapon', {
       weaponKey: effect.weaponKey,
-      level: level
+      level: level,
+      slot: slot
+    });
+  }
+
+  /** Apply upgradeWeapon operation - upgrades existing weapon in slot. */
+  private applyUpgradeWeapon(effect: UpgradeEffect): void {
+    const slot = effect.weaponSlot || 0;
+    const value = effect.value || 1;
+
+    this.bus.emit('UpgradeWeapon', {
+      slot: slot,
+      levelIncrease: value
+    });
+  }
+
+  /** Apply switchProjectile operation - changes projectile type for weapon in slot. */
+  private applySwitchProjectile(effect: UpgradeEffect): void {
+    if (!effect.projectileKey) return;
+
+    const slot = effect.weaponSlot || 0; // Default to first slot
+
+    this.bus.emit('SwitchProjectile', {
+      weaponSlot: slot,
+      projectileKey: effect.projectileKey
+    });
+  }
+
+  /** Apply addWeaponSlot operation - adds additional weapon slot to tower. */
+  private applyAddWeaponSlot(effect: UpgradeEffect): void {
+    this.bus.emit('AddWeaponSlot', {
+      count: effect.value || 1
     });
   }
 

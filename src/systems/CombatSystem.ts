@@ -8,6 +8,7 @@ import { CollisionPair } from './CollisionSystem.js';
 import { Projectile } from '../gameplay/Projectile.js';
 import { Enemy } from '../gameplay/Enemy.js';
 import { Tower } from '../gameplay/Tower.js';
+import { Vec2 } from '../gameplay/Entity.js';
 
 export type DamageEvent = {
   target: Enemy | Tower;
@@ -17,10 +18,18 @@ export type DamageEvent = {
   timestamp: number;
 };
 
+export type ExplosionEvent = {
+  position: Vec2;
+  radius: number;
+  damage: number;
+  timestamp: number;
+};
+
 export class CombatSystem {
   private world: World;
   private bus: EventBus;
   private damageEvents: DamageEvent[] = [];
+  private explosionEvents: ExplosionEvent[] = [];
   private invincibleTower: boolean = false; // Dev tool toggle
 
   constructor(args: { world: World; bus: EventBus }) {
@@ -43,10 +52,23 @@ export class CombatSystem {
     return [...this.damageEvents];
   }
 
+  /** Get explosion events for visual effects */
+  getExplosionEvents(): ExplosionEvent[] {
+    return [...this.explosionEvents];
+  }
+
   /** Clear old damage events (called each frame) */
   clearOldDamageEvents(maxAge: number = 3000): void {
     const now = Date.now();
     this.damageEvents = this.damageEvents.filter(event =>
+      now - event.timestamp < maxAge
+    );
+  }
+
+  /** Clear old explosion events (called each frame) */
+  clearOldExplosionEvents(maxAge: number = 1000): void {
+    const now = Date.now();
+    this.explosionEvents = this.explosionEvents.filter(event =>
       now - event.timestamp < maxAge
     );
   }
@@ -71,7 +93,7 @@ export class CombatSystem {
     const projectile = collision.entityA as Projectile;
     const enemy = collision.entityB as Enemy;
 
-    // Apply damage to enemy
+    // Apply damage to the primary target
     const damageEvent: DamageEvent = {
       target: enemy,
       amount: projectile.damage,
@@ -84,6 +106,11 @@ export class CombatSystem {
 
     const wasKilled = enemy.applyDamage(projectile.damage);
 
+    // Handle explosive area damage if projectile has explosion
+    if (projectile.explosion && projectile.explosionRadius > 0) {
+      this.handleExplosion(projectile, enemy.pos);
+    }
+
     // Handle projectile hit (piercing vs non-piercing)
     projectile.onHit();
 
@@ -95,6 +122,67 @@ export class CombatSystem {
         position: { x: enemy.pos.x, y: enemy.pos.y }
       });
     }
+  }
+
+  private handleExplosion(projectile: Projectile, explosionCenter: Vec2): void {
+    // Get all enemies in the world
+    const enemies = this.world.query((entity): entity is Enemy => entity instanceof Enemy);
+
+    // Calculate explosion damage
+    const explosionDamage = Math.round(projectile.damage * projectile.explosionDamage);
+
+    // Find enemies within explosion radius
+    for (const enemy of enemies) {
+      if (!enemy.alive) continue; // Skip dead enemies
+
+      const distance = this.getDistance(explosionCenter, enemy.pos);
+
+      if (distance <= projectile.explosionRadius) {
+        // Apply explosion damage (reduced by distance for realism)
+        const distanceRatio = distance / projectile.explosionRadius;
+        const scaledDamage = Math.round(explosionDamage * (1 - distanceRatio * 0.5)); // 50% damage reduction at edge
+
+        if (scaledDamage > 0) {
+          const damageEvent: DamageEvent = {
+            target: enemy,
+            amount: scaledDamage,
+            source: projectile,
+            position: { x: enemy.pos.x, y: enemy.pos.y },
+            timestamp: Date.now()
+          };
+
+          this.damageEvents.push(damageEvent);
+
+          const wasKilled = enemy.applyDamage(scaledDamage);
+
+          if (wasKilled) {
+            this.bus.emit('EnemyKilled', {
+              enemy: enemy,
+              xpReward: enemy.xp,
+              position: { x: enemy.pos.x, y: enemy.pos.y }
+            });
+          }
+        }
+      }
+    }
+
+    // Store explosion event for visual effects
+    const explosionEvent: ExplosionEvent = {
+      position: explosionCenter,
+      radius: projectile.explosionRadius,
+      damage: explosionDamage,
+      timestamp: Date.now()
+    };
+    this.explosionEvents.push(explosionEvent);
+
+    // Emit explosion event for other systems
+    this.bus.emit('ExplosionTriggered', explosionEvent);
+  }
+
+  private getDistance(pos1: Vec2, pos2: Vec2): number {
+    const dx = pos1.x - pos2.x;
+    const dy = pos1.y - pos2.y;
+    return Math.sqrt(dx * dx + dy * dy);
   }
 
   private handleEnemyGroundCollision(collision: CollisionPair): void {

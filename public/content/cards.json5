@@ -2,6 +2,7 @@
 // Contains all cards shown during level-up with titles, descriptions, and outcomes
 // Links to upgrade system for card selection results
 {
+  // Core tower upgrades
   "damage_boost": {
     "name": "Damage Boost",
     "description": "Increase tower damage by 25%",
@@ -35,48 +36,89 @@
       "color": "#4ecdc4"
     }
   },
-  "projectile_speed": {
-    "name": "Velocity Boost",
-    "description": "Increase projectile speed by 30%",
+
+  // Weapon equipment cards
+  "rapid_cannon": {
+    "name": "Rapid Cannon",
+    "description": "Equip fast-firing cannon with reduced damage",
     "rarity": "uncommon",
-    "weight": 60,
-    "upgradeKey": "projectile_speed",
+    "weight": 70,
+    "upgradeKey": "equip_rapid_cannon",
     "visual": {
-      "icon": "⚡",
-      "color": "#45b7d1"
+      "icon": "🚀",
+      "color": "#f39c12"
     }
   },
-  "scatter_shot": {
-    "name": "Scatter-Shot",
-    "description": "Fire 2 additional projectiles",
+  "scatter_cannon": {
+    "name": "Scatter Cannon",
+    "description": "Equip multi-shot cannon that fires in a spread",
     "rarity": "rare",
-    "weight": 30,
-    "upgradeKey": "scatter_shot",
+    "weight": 40,
+    "upgradeKey": "equip_scatter_cannon",
     "visual": {
       "icon": "📡",
       "color": "#9b59b6"
     }
   },
-  "projectile_size": {
-    "name": "Projectile Size",
-    "description": "Increases projectile size",
-    "rarity": "uncommon",
-    "weight": 60,
-    "upgradeKey": "projectile_size",
+  "heavy_cannon": {
+    "name": "Heavy Cannon",
+    "description": "Equip powerful cannon firing explosive shells",
+    "rarity": "legendary",
+    "weight": 15,
+    "upgradeKey": "equip_heavy_cannon",
     "visual": {
-      "icon": "⚡",
-      "color": "#1be7c8ff"
+      "icon": "💥",
+      "color": "#e74c3c"
     }
   },
-  "piercing_shot": {
+
+  // Weapon upgrade cards
+  "weapon_upgrade": {
+    "name": "Weapon Enhancement",
+    "description": "Upgrade your equipped weapon to the next level",
+    "rarity": "uncommon",
+    "weight": 60,
+    "upgradeKey": "weapon_upgrade",
+    "visual": {
+      "icon": "⬆️",
+      "color": "#3498db"
+    }
+  },
+
+  // Projectile type upgrades
+  "piercing_rounds": {
     "name": "Piercing Rounds",
-    "description": "Projectiles pierce through enemies",
+    "description": "Switch to piercing bullets that go through enemies",
     "rarity": "rare",
-    "weight": 25,
-    "upgradeKey": "piercing_shot",
+    "weight": 35,
+    "upgradeKey": "piercing_rounds",
     "visual": {
       "icon": "🎯",
-      "color": "#e74c3c"
+      "color": "#00ff88"
+    }
+  },
+  "explosive_shells": {
+    "name": "Explosive Shells",
+    "description": "Switch to explosive projectiles with area damage",
+    "rarity": "rare",
+    "weight": 30,
+    "upgradeKey": "explosive_shells",
+    "visual": {
+      "icon": "💣",
+      "color": "#ff4444"
+    }
+  },
+
+  // Advanced upgrades
+  "dual_weapons": {
+    "name": "Dual Weapons",
+    "description": "Add an additional weapon slot",
+    "rarity": "legendary",
+    "weight": 10,
+    "upgradeKey": "dual_weapons",
+    "visual": {
+      "icon": "🔫",
+      "color": "#8e44ad"
     }
   }
 }

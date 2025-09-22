@@ -1,8 +1,9 @@
 {
   // Upgrade Effects - Applied when cards are chosen
   // Each upgrade can have multiple levels (1-5) with different effect strengths
-  // Operations: statAdd, statMult, statSet
+  // Operations: statAdd, statMult, statSet, equipWeapon, upgradeWeapon, switchProjectile, addWeaponSlot
 
+  // Tower-based upgrades (work with new system)
   "damage_boost": {
     "maxLevel": 5,
     "effects": {
@@ -36,44 +37,60 @@
     }
   },
 
-  "projectile_speed": {
+  // Weapon equipment upgrades
+  "equip_rapid_cannon": {
+    "maxLevel": 1,
+    "effects": {
+      "1": [{ "op": "equipWeapon", "weaponKey": "rapidCannon", "level": 1, "weaponSlot": 0 }]
+    }
+  },
+
+  "equip_scatter_cannon": {
+    "maxLevel": 1,
+    "effects": {
+      "1": [{ "op": "equipWeapon", "weaponKey": "scatterCannon", "level": 1, "weaponSlot": 0 }]
+    }
+  },
+
+  "equip_heavy_cannon": {
+    "maxLevel": 1,
+    "effects": {
+      "1": [{ "op": "equipWeapon", "weaponKey": "heavyCannon", "level": 1, "weaponSlot": 0 }]
+    }
+  },
+
+  // Weapon upgrade system
+  "weapon_upgrade": {
     "maxLevel": 5,
     "effects": {
-      "1": [{ "op": "statMult", "target": "projectile.speed", "value": 1.30 }],
-      "2": [{ "op": "statMult", "target": "projectile.speed", "value": 1.50 }],
-      "3": [{ "op": "statMult", "target": "projectile.speed", "value": 1.75 }],
-      "4": [{ "op": "statMult", "target": "projectile.speed", "value": 2.00 }],
-      "5": [{ "op": "statMult", "target": "projectile.speed", "value": 2.50 }]
+      "1": [{ "op": "upgradeWeapon", "weaponSlot": 0, "value": 1 }],
+      "2": [{ "op": "upgradeWeapon", "weaponSlot": 0, "value": 1 }],
+      "3": [{ "op": "upgradeWeapon", "weaponSlot": 0, "value": 1 }],
+      "4": [{ "op": "upgradeWeapon", "weaponSlot": 0, "value": 1 }],
+      "5": [{ "op": "upgradeWeapon", "weaponSlot": 0, "value": 1 }]
     }
   },
 
-    "projectile_size": {
-    "maxLevel": 5,
+  // Projectile switching upgrades
+  "piercing_rounds": {
+    "maxLevel": 1,
     "effects": {
-      "1": [{ "op": "statMult", "target": "projectile.radius", "value": 1.25 }],
-      "2": [{ "op": "statMult", "target": "projectile.radius", "value": 1.50 }],
-      "3": [{ "op": "statMult", "target": "projectile.radius", "value": 1.75 }],
-      "4": [{ "op": "statMult", "target": "projectile.radius", "value": 2.00 }],
-      "5": [{ "op": "statMult", "target": "projectile.radius", "value": 2.25 }]
+      "1": [{ "op": "switchProjectile", "weaponSlot": 0, "projectileKey": "piercingBullet" }]
     }
   },
 
-  "scatter_shot": {
-    "maxLevel": 4,
+  "explosive_shells": {
+    "maxLevel": 1,
     "effects": {
-      "1": [{ "op": "statAdd", "target": "weapon.scatterLevel", "value": 1 }],
-      "2": [{ "op": "statAdd", "target": "weapon.scatterLevel", "value": 1 }],
-      "3": [{ "op": "statAdd", "target": "weapon.scatterLevel", "value": 1 }],
-      "4": [{ "op": "statAdd", "target": "weapon.scatterLevel", "value": 1 }]
+      "1": [{ "op": "switchProjectile", "weaponSlot": 0, "projectileKey": "explosiveShell" }]
     }
   },
 
-  "piercing_shot": {
-    "maxLevel": 3,
+  // Additional weapon slots
+  "dual_weapons": {
+    "maxLevel": 1,
     "effects": {
-      "1": [{ "op": "statSet", "target": "projectile.piercing", "value": true }, { "op": "statAdd", "target": "projectile.maxHits", "value": 2 }],
-      "2": [{ "op": "statAdd", "target": "projectile.maxHits", "value": 1 }],
-      "3": [{ "op": "statAdd", "target": "projectile.maxHits", "value": 2 }]
+      "1": [{ "op": "addWeaponSlot", "value": 1 }]
     }
   }
 }

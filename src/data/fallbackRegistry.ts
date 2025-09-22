@@ -10,12 +10,13 @@ export const FALLBACK_REGISTRY: Registry = {
     bullet: {
       name: "Bullet",
       description: "Standard projectile",
+      baseDamage: 10,
       speed: 200,
       lifetime: 3.0,
       radius: 3,
       visual: { type: "circle", color: "#ffff00", size: 6 },
-      physics: { piercing: false, gravity: false, bounce: false },
-      effects: { trail: false, explosion: false }
+      physics: { piercing: false, maxHits: 1, gravity: false, bounce: false, bounceCount: 0 },
+      effects: { trail: false, explosion: false, explosionRadius: 0, explosionDamage: 0 }
     }
   },
   weapons: {
@@ -25,6 +26,9 @@ export const FALLBACK_REGISTRY: Registry = {
       type: "cannon",
       projectileKey: "bullet",
       baseCooldown: 1.0,
+      baseFireRate: 1.0,
+      damageMultiplier: 1.0,
+      scatterPattern: 0,
       baseUpgradeStats: { damage: 10, fireRate: 1.0, range: 300 },
       levelScaling: { damage: 1.2, fireRate: 1.1, range: 1.05 },
       maxLevel: 5,
@@ -106,6 +110,22 @@ export const FALLBACK_REGISTRY: Registry = {
       weight: 80,
       upgradeKey: "tower_health",
       visual: { icon: "🛡️", color: "#4ecdc4" }
+    },
+    rapid_cannon: {
+      name: "Rapid Cannon",
+      description: "Equip fast-firing cannon",
+      rarity: "uncommon",
+      weight: 70,
+      upgradeKey: "equip_rapid_cannon",
+      visual: { icon: "🚀", color: "#f39c12" }
+    },
+    scatter_cannon: {
+      name: "Scatter Cannon",
+      description: "Equip multi-shot cannon",
+      rarity: "rare",
+      weight: 40,
+      upgradeKey: "equip_scatter_cannon",
+      visual: { icon: "📡", color: "#9b59b6" }
     }
   },
   upgrades: {
@@ -149,6 +169,26 @@ export const FALLBACK_REGISTRY: Registry = {
         "3": [{ "op": "statAdd", "target": "tower.maxHp", "value": 100 }],
         "4": [{ "op": "statAdd", "target": "tower.maxHp", "value": 150 }],
         "5": [{ "op": "statAdd", "target": "tower.maxHp", "value": 200 }]
+      }
+    },
+    equip_rapid_cannon: {
+      name: "Rapid Cannon",
+      description: "Equip fast-firing cannon",
+      maxLevel: 1,
+      icon: "🚀",
+      color: "#f39c12",
+      effects: {
+        "1": [{ "op": "equipWeapon", "weaponKey": "rapidCannon", "level": 1, "weaponSlot": 0 }]
+      }
+    },
+    equip_scatter_cannon: {
+      name: "Scatter Cannon",
+      description: "Equip multi-shot cannon",
+      maxLevel: 1,
+      icon: "📡",
+      color: "#9b59b6",
+      effects: {
+        "1": [{ "op": "equipWeapon", "weaponKey": "scatterCannon", "level": 1, "weaponSlot": 0 }]
       }
     }
   },

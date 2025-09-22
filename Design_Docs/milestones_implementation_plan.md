@@ -1,4 +1,4 @@
-# Milestones & Implementation Plan (High-Level)
+~# Milestones & Implementation Plan (High-Level)
 
 > Goal: Ship visual, testable increments. Each milestone ends with something **on-screen** so we can validate, roll back, or adjust quickly.
 >

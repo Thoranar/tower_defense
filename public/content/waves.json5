@@ -6,7 +6,7 @@
   {
     "timeStart": 0,
     "timeEnd": 60,
-    "spawnInterval": 2.0,
+    "spawnInterval": 1.5,
     "enemies": [
       { "key": "basic", "weight": 100 }
     ]
@@ -14,7 +14,7 @@
   {
     "timeStart": 60,
     "timeEnd": 120,
-    "spawnInterval": 1.5,
+    "spawnInterval": 1.0,
     "enemies": [
       { "key": "basic", "weight": 80 },
       { "key": "fast", "weight": 20 }
@@ -23,7 +23,7 @@
   {
     "timeStart": 120,
     "timeEnd": 200,
-    "spawnInterval": 1.0,
+    "spawnInterval": 0.5,
     "enemies": [
       { "key": "basic", "weight": 60 },
       { "key": "fast", "weight": 30 },
@@ -33,7 +33,7 @@
   {
     "timeStart": 200,
     "timeEnd": 300,
-    "spawnInterval": 0.75,
+    "spawnInterval": 0.25,
     "enemies": [
       { "key": "basic", "weight": 50 },
       { "key": "fast", "weight": 25 },
@@ -44,7 +44,7 @@
   {
     "timeStart": 300,
     "timeEnd": 450,
-    "spawnInterval": 0.5,
+    "spawnInterval": 0.15,
     "enemies": [
       { "key": "basic", "weight": 40 },
       { "key": "fast", "weight": 30 },
@@ -55,7 +55,7 @@
   {
     "timeStart": 450,
     "timeEnd": 600,
-    "spawnInterval": 0.2,
+    "spawnInterval": 0.05,
     "enemies": [
       { "key": "basic", "weight": 30 },
       { "key": "fast", "weight": 35 },

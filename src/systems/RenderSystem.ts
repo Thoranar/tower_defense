@@ -57,6 +57,7 @@ export class RenderSystem {
     if (args.inRun && args.tower) {
       this.renderGameEntities(args.tower, args.clock, args.experienceSystem);
       this.renderFloatingDamage(args.combatSystem);
+      this.renderExplosionEffects(args.combatSystem);
       this.renderBossUI(args.bossSystem);
     }
 
@@ -115,6 +116,33 @@ export class RenderSystem {
         );
       }
     }
+  }
+
+  /**
+   * Render explosion visual effects
+   */
+  private renderExplosionEffects(combatSystem?: CombatSystem | undefined): void {
+    if (!combatSystem) return;
+
+    const explosionEvents = combatSystem.getExplosionEvents();
+    const now = Date.now();
+    const maxAge = 1000; // 1 second
+
+    for (const event of explosionEvents) {
+      const age = now - event.timestamp;
+      if (age < maxAge) {
+        this.uiRenderer.drawExplosion(
+          event.position.x,
+          event.position.y,
+          event.radius,
+          age,
+          maxAge
+        );
+      }
+    }
+
+    // Clean up old explosion events
+    combatSystem.clearOldExplosionEvents(maxAge);
   }
 
   /**

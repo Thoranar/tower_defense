@@ -215,6 +215,50 @@ export class UIRenderer {
     this.ctx.restore();
   }
 
+  drawExplosion(x: number, y: number, maxRadius: number, age: number, maxAge: number): void {
+    const progress = age / maxAge;
+
+    // Expanding ring effect - starts small and grows to full size
+    const currentRadius = maxRadius * progress;
+
+    // Fade out over time
+    const alpha = 1 - progress;
+
+    // Ring thickness decreases over time
+    const ringThickness = Math.max(1, 8 * (1 - progress));
+
+    this.ctx.save();
+    this.ctx.globalAlpha = alpha;
+
+    // Draw outer ring (fire/explosion color)
+    this.ctx.strokeStyle = '#ff4400';
+    this.ctx.lineWidth = ringThickness;
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, currentRadius, 0, Math.PI * 2);
+    this.ctx.stroke();
+
+    // Draw inner ring (bright orange/yellow)
+    if (currentRadius > ringThickness) {
+      this.ctx.strokeStyle = '#ffaa00';
+      this.ctx.lineWidth = Math.max(1, ringThickness * 0.6);
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, currentRadius * 0.7, 0, Math.PI * 2);
+      this.ctx.stroke();
+    }
+
+    // Draw core (bright yellow/white)
+    if (progress < 0.5) { // Only show core for first half of animation
+      const coreAlpha = alpha * 2 * (1 - progress * 2); // Fade out faster
+      this.ctx.globalAlpha = coreAlpha;
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, currentRadius * 0.3, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+
+    this.ctx.restore();
+  }
+
   drawBossWarning(bossType: 'mini' | 'final', timeRemaining: number, bossKey?: string): void {
     const centerX = this.width / 2;
     const centerY = this.height / 2 - 100;
