@@ -43,6 +43,7 @@ export class Game {
   private running: boolean = false;
   private animationId: number = 0;
   private inRun: boolean = false;
+  private gamePaused: boolean = false;
   private bus: EventBus;
 
   // Game systems
@@ -97,10 +98,12 @@ export class Game {
     // Set up card system event listeners
     this.bus.on('CardDraftActive', (data: any) => {
       this.cardOverlay.show(data.choices);
+      this.pauseGame();
     });
 
     this.bus.on('CardDraftClosed', () => {
       this.cardOverlay.hide();
+      this.resumeGame();
     });
 
     // Register DevTools actions
@@ -110,6 +113,15 @@ export class Game {
       grantXp: () => this.grantXpManually(10),
       getUpgradeState: () => this.upgradeSystem?.getUpgradeState() || { levels: {}, slots: { used: 0, max: 5 }, canSelectAny: false }
     });
+
+    // Register parameterized actions separately
+    this.devTools.registerParameterizedAction('applyUpgrade', (upgradeKey: string) => this.applyUpgradeManually(upgradeKey));
+
+    // Populate available upgrades for DevTools
+    if (this.registry) {
+      const availableUpgrades = Object.keys(this.registry.upgrades);
+      this.devTools.setAvailableUpgrades(availableUpgrades);
+    }
 
     this.startRun(); // Auto-start a run for milestone 3
     console.log('Game initialized');
@@ -161,7 +173,8 @@ export class Game {
     this.towerSystem = new TowerSystem({
       world: this.world,
       input: this.input,
-      creators: this.creators
+      creators: this.creators,
+      bus: this.bus
     });
 
     this.renderSystem = new RenderSystem({
@@ -209,7 +222,7 @@ export class Game {
     // Update DevTools overlay
     this.devOverlay.update(deltaTime);
 
-    if (this.inRun) {
+    if (this.inRun && !this.gamePaused) {
       // Update tower system (input, firing, tower state)
       if (this.towerSystem) {
         const fireRateMultiplier = this.devTools.getSlider('fireRateMult');
@@ -404,6 +417,16 @@ export class Game {
     }
   }
 
+  /** Manually apply upgrade (for DevTools) */
+  applyUpgradeManually(upgradeKey: string): void {
+    if (this.upgradeSystem && this.inRun) {
+      console.log(`DevTools applying upgrade: ${upgradeKey}`);
+      this.upgradeSystem.apply(upgradeKey);
+    } else {
+      console.warn('Cannot apply upgrade: UpgradeSystem not available or not in run');
+    }
+  }
+
   /** Helper method to get the tower from the world */
   private getTower(): Tower | null {
     // Delegate to TowerSystem if available
@@ -440,5 +463,24 @@ export class Game {
 
     this.devOverlay.resize(width, height);
     this.cardOverlay.resize(width, height);
+  }
+
+  /** Pause the game (stops all game system updates but keeps rendering) */
+  pauseGame(): void {
+    if (this.gamePaused) return;
+    this.gamePaused = true;
+    console.log('Game paused');
+  }
+
+  /** Resume the game (restores game system updates) */
+  resumeGame(): void {
+    if (!this.gamePaused) return;
+    this.gamePaused = false;
+    console.log('Game resumed');
+  }
+
+  /** Check if the game is currently paused */
+  isPaused(): boolean {
+    return this.gamePaused;
   }
 }

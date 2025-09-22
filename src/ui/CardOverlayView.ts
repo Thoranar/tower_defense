@@ -98,6 +98,10 @@ export class CardOverlayView {
     // Instructions
     const instructY = cardY + cardHeight + 40;
     this.uiRenderer.drawText('Click a card to select it', this.width / 2 - 100, instructY, '#ccc', '16px monospace');
+
+    // Pause indicator
+    const pauseY = instructY + 30;
+    this.uiRenderer.drawText('GAME PAUSED', this.width / 2 - 50, pauseY, '#ffa500', 'bold 14px monospace');
   }
 
   private drawCard(x: number, y: number, width: number, height: number, card: CardBlueprint): void {

@@ -128,6 +128,16 @@ export type GameConfig = {
   };
 };
 
+export type ScatterPattern = {
+  name: string;
+  description: string;
+  angles: number[]; // Angles in degrees
+};
+
+export type ScatterPatterns = {
+  patterns: Record<string, ScatterPattern>;
+};
+
 export type Registry = {
   projectiles: Record<string, ProjectileBlueprint>;
   weapons: Record<string, WeaponBlueprint>;
@@ -135,33 +145,36 @@ export type Registry = {
   waves: WaveBlueprint[];
   cards: Record<string, CardBlueprint>;
   upgrades: Record<string, UpgradeBlueprint>;
+  scatterPatterns: ScatterPatterns;
   config: GameConfig;
 };
 
 // Simple synchronous loader for now (async loading in later milestones)
 export async function loadRegistry(): Promise<Registry> {
   try {
-    const [projectilesResponse, weaponsResponse, enemiesResponse, wavesResponse, cardsResponse, upgradesResponse, configResponse] = await Promise.all([
+    const [projectilesResponse, weaponsResponse, enemiesResponse, wavesResponse, cardsResponse, upgradesResponse, scatterPatternsResponse, configResponse] = await Promise.all([
       fetch('/public/content/projectiles.json5'),
       fetch('/public/content/weapons.json5'),
       fetch('/public/content/enemies.json5'),
       fetch('/public/content/waves.json5'),
       fetch('/public/content/cards.json5'),
       fetch('/public/content/upgrades.json5'),
+      fetch('/public/content/scatterPatterns.json5'),
       fetch('/public/content/config.json5')
     ]);
 
-    if (!projectilesResponse.ok || !weaponsResponse.ok || !enemiesResponse.ok || !wavesResponse.ok || !cardsResponse.ok || !upgradesResponse.ok || !configResponse.ok) {
+    if (!projectilesResponse.ok || !weaponsResponse.ok || !enemiesResponse.ok || !wavesResponse.ok || !cardsResponse.ok || !upgradesResponse.ok || !scatterPatternsResponse.ok || !configResponse.ok) {
       throw new Error('Failed to load content files');
     }
 
-    const [projectilesText, weaponsText, enemiesText, wavesText, cardsText, upgradesText, configText] = await Promise.all([
+    const [projectilesText, weaponsText, enemiesText, wavesText, cardsText, upgradesText, scatterPatternsText, configText] = await Promise.all([
       projectilesResponse.text(),
       weaponsResponse.text(),
       enemiesResponse.text(),
       wavesResponse.text(),
       cardsResponse.text(),
       upgradesResponse.text(),
+      scatterPatternsResponse.text(),
       configResponse.text()
     ]);
 
@@ -220,6 +233,7 @@ export async function loadRegistry(): Promise<Registry> {
     const waves = JSON.parse(cleanJson5(wavesText));
     const cards = JSON.parse(cleanJson5(cardsText));
     const upgrades = JSON.parse(cleanJson5(upgradesText));
+    const scatterPatterns = JSON.parse(cleanJson5(scatterPatternsText));
     const config = JSON.parse(cleanJson5(configText));
 
     console.log('Registry loaded from JSON5 files:');
@@ -230,6 +244,7 @@ export async function loadRegistry(): Promise<Registry> {
     console.log('- Wave count:', waves.length);
     console.log('- Card types:', Object.keys(cards));
     console.log('- Upgrade types:', Object.keys(upgrades));
+    console.log('- Scatter patterns:', Object.keys(scatterPatterns.patterns));
     console.log('- XP base per level:', config.xp?.basePerLevel);
 
     return {
@@ -239,6 +254,7 @@ export async function loadRegistry(): Promise<Registry> {
       waves,
       cards,
       upgrades,
+      scatterPatterns,
       config
     };
   } catch (error) {
@@ -309,6 +325,14 @@ export async function loadRegistry(): Promise<Registry> {
           effects: {
             "1": [{ "op": "statAdd", "target": "tower.damageMult", "value": 0.25 }]
           }
+        }
+      },
+      scatterPatterns: {
+        patterns: {
+          "0": { name: "Single Shot", description: "Standard single projectile", angles: [0] },
+          "1": { name: "Twin Shot", description: "Two projectiles at 25° spread", angles: [-25, 25] },
+          "2": { name: "Triple Shot", description: "Three projectiles: center + 25° spread", angles: [-25, 0, 25] },
+          "3": { name: "Quad Shot", description: "Four projectiles: 25° and 45° spread", angles: [-45, -25, 25, 45] }
         }
       },
       config: {

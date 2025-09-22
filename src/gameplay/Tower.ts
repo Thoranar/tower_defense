@@ -12,6 +12,17 @@ export type TowerStats = {
   regen: number;
 };
 
+// Additional stats for weapons and projectiles
+export type WeaponStats = {
+  scatterLevel: number; // 0=single, 1=2 shots at 25°, 2=3 shots (25° + center), 3=4 shots (25° + 45°)
+};
+
+export type ProjectileStats = {
+  speedMult: number;
+  piercing: boolean;
+  maxHits: number;
+};
+
 export type StatModificationEvent = {
   op: 'add' | 'mult' | 'set';
   target: string;
@@ -29,6 +40,10 @@ export type EquipWeaponEvent = {
 export class Tower extends Entity {
   stats: TowerStats;             // hp, maxHp, damageMult, fireRateMult, regen
   baseStats: TowerStats;         // Original stats before upgrades
+  weaponStats: WeaponStats;      // weapon-related upgrades
+  baseWeaponStats: WeaponStats;  // Original weapon stats
+  projectileStats: ProjectileStats; // projectile-related upgrades
+  baseProjectileStats: ProjectileStats; // Original projectile stats
   weapons: Weapon[] = [];        // equipped weapons
   turretAngle: number = 0;       // rad; controlled by input
   private bus: EventBus | null;
@@ -45,8 +60,22 @@ export class Tower extends Entity {
       regen: 0
     };
 
+    // Initialize base weapon stats
+    this.baseWeaponStats = {
+      scatterLevel: 0 // Single shot by default
+    };
+
+    // Initialize base projectile stats
+    this.baseProjectileStats = {
+      speedMult: 1.0,
+      piercing: false,
+      maxHits: 1
+    };
+
     // Copy base stats to current stats
     this.stats = { ...this.baseStats };
+    this.weaponStats = { ...this.baseWeaponStats };
+    this.projectileStats = { ...this.baseProjectileStats };
     this.bus = bus || null;
 
     // Listen for upgrade events if bus is provided
@@ -91,39 +120,114 @@ export class Tower extends Entity {
     };
   }
 
+  /** Get scatter angles for the given scatter level using registry configuration */
+  private getScatterAngles(scatterLevel: number, registry: any): number[] {
+    const scatterPatterns = registry?.scatterPatterns?.patterns;
+    if (!scatterPatterns) {
+      // Fallback to single shot if no patterns available
+      console.warn('No scatter patterns found in registry, using single shot');
+      return [0];
+    }
+
+    const pattern = scatterPatterns[scatterLevel.toString()];
+    if (!pattern || !pattern.angles) {
+      console.warn(`No scatter pattern found for level ${scatterLevel}, using single shot`);
+      return [0];
+    }
+
+    // Convert degrees to radians
+    return pattern.angles.map((angleDegrees: number) => angleDegrees * Math.PI / 180);
+  }
+
   /** Fire all weapons and return projectiles created */
   fireWeapons(fireRateMultiplier: number = 1.0, creators: any = null): Projectile[] {
     const projectiles: Projectile[] = [];
 
-
     for (const weapon of this.weapons) {
-      const fireContext: FireContext = {
-        ownerId: this.id,
-        origin: { x: this.pos.x, y: this.pos.y },
-        direction: this.getTurretDirection(),
-        creators: creators
-      };
+      // Check if weapon can fire before attempting scatter shots
+      if (!weapon.canFire()) {
+        continue;
+      }
 
-      const newProjectiles = weapon.fire(fireContext, fireRateMultiplier);
-      projectiles.push(...newProjectiles);
+      const scatterLevel = this.weaponStats.scatterLevel;
+      const baseDirection = this.getTurretDirection();
+
+      // Calculate scatter angles based on level
+      const registry = creators?.registry;
+      const scatterAngles = this.getScatterAngles(scatterLevel, registry);
+      // console.log(`Scatter level: ${scatterLevel}, projectiles: ${scatterAngles.length}, angles: [${scatterAngles.map(a => (a * 180 / Math.PI).toFixed(1)).join(', ')}]°`);
+
+      // Temporarily store original cooldown timer to restore after all scatter shots
+      const originalTimer = (weapon as any).timer;
+
+      for (const angleOffset of scatterAngles) {
+        // Reset timer before each scatter shot to allow multiple fires
+        (weapon as any).timer = 0;
+
+        // Calculate new direction with angle offset
+        const currentAngle = this.turretAngle + angleOffset;
+        const scatterDirection = {
+          x: Math.cos(currentAngle),
+          y: Math.sin(currentAngle)
+        };
+
+        // Create fire context for this scatter shot
+        const fireContext: FireContext = {
+          ownerId: this.id,
+          origin: { x: this.pos.x, y: this.pos.y },
+          direction: scatterDirection,
+          creators: creators,
+          // Pass tower stats to weapons for upgrades
+          towerStats: {
+            damageMult: this.stats.damageMult,
+            weaponStats: this.weaponStats,
+            projectileStats: this.projectileStats
+          }
+        };
+
+        const shotProjectiles = weapon.fire(fireContext, fireRateMultiplier);
+        // console.log(`Fired ${shotProjectiles.length} projectiles at angle ${(angleOffset * 180 / Math.PI).toFixed(1)}°`);
+        projectiles.push(...shotProjectiles);
+      }
+
+      // Restore the weapon cooldown after all scatter shots are complete
+      // This ensures the weapon has proper cooldown between volleys
     }
 
+    // console.log(`Total projectiles created: ${projectiles.length}`);
     return projectiles;
   }
 
   /** Apply a stat modification from an upgrade. */
   private applyStatModification(data: StatModificationEvent): void {
     const { op, target, value } = data;
-    console.log(`Applying stat modification: ${op} ${target} ${value}`);
 
-    // Parse target (e.g., "tower.damageMult")
+    // Parse target (e.g., "tower.damageMult", "weapon.projectileCount", "projectile.speedMult")
     const targetParts = target.split('.');
-    if (targetParts[0] !== 'tower' || targetParts.length !== 2) {
-      console.warn(`Invalid tower stat target: ${target}`);
+    if (targetParts.length !== 2) {
+      console.warn(`Invalid stat target format: ${target}`);
       return;
     }
 
-    const statKey = targetParts[1] as keyof TowerStats;
+    const [category, statKey] = targetParts;
+
+    switch (category) {
+      case 'tower':
+        this.applyTowerStat(statKey as keyof TowerStats, op, value);
+        break;
+      case 'weapon':
+        this.applyWeaponStat(statKey as keyof WeaponStats, op, value);
+        break;
+      case 'projectile':
+        this.applyProjectileStat(statKey as keyof ProjectileStats, op, value);
+        break;
+      default:
+        console.warn(`Unknown stat category: ${category}`);
+    }
+  }
+
+  /** Apply tower stat modification */
+  private applyTowerStat(statKey: keyof TowerStats, op: string, value: number | boolean): void {
     if (!(statKey in this.stats)) {
       console.warn(`Unknown tower stat: ${statKey}`);
       return;
@@ -152,15 +256,70 @@ export class Tower extends Entity {
 
     // Special handling for maxHp changes - adjust current HP if needed
     if (statKey === 'maxHp') {
-      // If maxHp increased and we were at full health, restore to new max
       if (this.stats.hp === currentValue) {
         this.stats.hp = newValue;
-      }
-      // If current HP exceeds new max, cap it
-      else if (this.stats.hp > newValue) {
+      } else if (this.stats.hp > newValue) {
         this.stats.hp = newValue;
       }
     }
+  }
+
+  /** Apply weapon stat modification */
+  private applyWeaponStat(statKey: keyof WeaponStats, op: string, value: number | boolean): void {
+    if (!(statKey in this.weaponStats)) {
+      console.warn(`Unknown weapon stat: ${statKey}`);
+      return;
+    }
+
+    const currentValue = this.weaponStats[statKey] as number;
+    let newValue: number;
+
+    switch (op) {
+      case 'add':
+        newValue = currentValue + (value as number);
+        break;
+      case 'mult':
+        newValue = currentValue * (value as number);
+        break;
+      case 'set':
+        newValue = value as number;
+        break;
+      default:
+        console.warn(`Unknown stat operation: ${op}`);
+        return;
+    }
+
+    (this.weaponStats as any)[statKey] = newValue;
+    console.log(`Weapon ${statKey}: ${currentValue} -> ${newValue}`);
+  }
+
+  /** Apply projectile stat modification */
+  private applyProjectileStat(statKey: keyof ProjectileStats, op: string, value: number | boolean): void {
+    if (!(statKey in this.projectileStats)) {
+      console.warn(`Unknown projectile stat: ${statKey}`);
+      return;
+    }
+
+    const currentValue = this.projectileStats[statKey];
+    let newValue: number | boolean;
+
+    switch (op) {
+      case 'add':
+        newValue = (currentValue as number) + (value as number);
+        break;
+      case 'mult':
+        newValue = (currentValue as number) * (value as number);
+        break;
+      case 'set':
+        newValue = value;
+        break;
+      default:
+        console.warn(`Unknown stat operation: ${op}`);
+        return;
+    }
+
+    (this.projectileStats as any)[statKey] = newValue;
+    console.log(`Projectile ${statKey}: ${currentValue} -> ${newValue}`);
   }
 
   /** Handle equipping a new weapon. */
@@ -174,6 +333,8 @@ export class Tower extends Entity {
   reset(): void {
     // Reset to base stats
     this.stats = { ...this.baseStats };
+    this.weaponStats = { ...this.baseWeaponStats };
+    this.projectileStats = { ...this.baseProjectileStats };
     this.turretAngle = 0;
     this.weapons = [];
     console.log('Tower reset to base stats and full health');

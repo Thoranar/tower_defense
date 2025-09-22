@@ -84,8 +84,8 @@ export class CombatSystem {
 
     const wasKilled = enemy.applyDamage(projectile.damage);
 
-    // Remove projectile (unless it has piercing)
-    projectile.alive = false;
+    // Handle projectile hit (piercing vs non-piercing)
+    projectile.onHit();
 
     // Emit events
     if (wasKilled) {

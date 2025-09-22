@@ -9,6 +9,8 @@ export class DevToolsSystem {
   private visible: boolean = false;
   private readonly storageKey: string = 'tower_defense_devtools';
   private readonly shortcutKey: string = '`';
+  private selectedUpgrade: string = '';
+  private availableUpgrades: string[] = [];
 
   constructor() {
     this.initDefaults();
@@ -102,10 +104,16 @@ export class DevToolsSystem {
   }
 
   private gameActions: { [key: string]: () => void } = {};
+  private parameterizedActions: { [key: string]: (param: string) => void } = {};
 
   /** Register game action callbacks for DevTools */
   registerGameActions(actions: { [key: string]: () => void }): void {
     Object.assign(this.gameActions, actions);
+  }
+
+  /** Register parameterized action callbacks for DevTools */
+  registerParameterizedAction(key: string, action: (param: string) => void): void {
+    this.parameterizedActions[key] = action;
   }
 
   runAction(key: ActionKey): void {
@@ -135,6 +143,13 @@ export class DevToolsSystem {
         break;
       case 'clearStorage':
         this.clearStorage();
+        break;
+      case 'applyUpgrade':
+        if (this.parameterizedActions.applyUpgrade && this.selectedUpgrade) {
+          this.parameterizedActions.applyUpgrade(this.selectedUpgrade);
+        } else {
+          console.log('Apply upgrade requested (no handler or upgrade selected)');
+        }
         break;
       default:
         console.warn(`DevTools action not implemented: ${key}`);
@@ -182,5 +197,31 @@ export class DevToolsSystem {
 
   getSliders(): Readonly<SliderMap> {
     return this.sliders;
+  }
+
+  /** Set available upgrades for the selector */
+  setAvailableUpgrades(upgrades: string[]): void {
+    this.availableUpgrades = upgrades;
+    // Reset selection if current upgrade is no longer available
+    if (!upgrades.includes(this.selectedUpgrade)) {
+      this.selectedUpgrade = upgrades[0] || '';
+    }
+  }
+
+  /** Get available upgrades for the selector */
+  getAvailableUpgrades(): string[] {
+    return this.availableUpgrades;
+  }
+
+  /** Set selected upgrade */
+  setSelectedUpgrade(upgradeKey: string): void {
+    if (this.availableUpgrades.includes(upgradeKey)) {
+      this.selectedUpgrade = upgradeKey;
+    }
+  }
+
+  /** Get selected upgrade */
+  getSelectedUpgrade(): string {
+    return this.selectedUpgrade;
   }
 }

@@ -23,18 +23,25 @@ export class Cannon extends Weapon {
     const muzzleX = ctx.origin.x + ctx.direction.x * this.barrelLength;
     const muzzleY = ctx.origin.y + ctx.direction.y * this.barrelLength;
 
-    // Get projectile speed from registry
+    // Get projectile speed from registry and apply tower speed multiplier
     const projectileBlueprint = ctx.creators.registry?.projectiles[this.projectileKey];
-    const speed = projectileBlueprint?.speed ?? 400;
+    const baseSpeed = projectileBlueprint?.speed ?? 400;
+    const speedMultiplier = ctx.towerStats?.projectileStats?.speedMult ?? 1.0;
+    const speed = baseSpeed * speedMultiplier;
 
-    console.log(`Cannon firing: speed=${speed}, direction=(${ctx.direction.x.toFixed(2)}, ${ctx.direction.y.toFixed(2)})`);
 
     // Calculate velocity based on direction and speed
     const vx = ctx.direction.x * speed;
     const vy = ctx.direction.y * speed;
 
-    // Get damage from weapon blueprint
-    const damage = this.blueprint.baseUpgradeStats.damage;
+    // Get damage from weapon blueprint and apply tower damage multiplier
+    const baseDamage = this.blueprint.baseUpgradeStats.damage;
+    const damageMultiplier = ctx.towerStats?.damageMult ?? 1.0;
+    const damage = baseDamage * damageMultiplier;
+
+    // Get piercing stats from tower
+    const piercing = ctx.towerStats?.projectileStats?.piercing ?? false;
+    const maxHits = ctx.towerStats?.projectileStats?.maxHits ?? 1;
 
     // Create projectile using creators (which will use registry data)
     const projectile = ctx.creators.projectile(
@@ -44,7 +51,9 @@ export class Cannon extends Weapon {
       vx,
       vy,
       damage,
-      ctx.ownerId
+      ctx.ownerId,
+      piercing,
+      maxHits
     );
 
     // Reset cooldown with fire rate multiplier applied

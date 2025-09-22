@@ -3,6 +3,7 @@ import { Input } from '../core/Input.js';
 import { World } from '../core/World.js';
 import { Creators } from '../data/creators.js';
 import { Projectile } from '../gameplay/Projectile.js';
+import { EventBus } from '../core/EventBus.js';
 
 /**
  * TowerSystem handles all tower-specific logic including:
@@ -17,11 +18,15 @@ export class TowerSystem {
   private world: World;
   private input: Input;
   private creators: Creators;
+  private bus: EventBus;
 
-  constructor(args: { world: World; input: Input; creators: Creators }) {
+  constructor(args: { world: World; input: Input; creators: Creators; bus: EventBus }) {
     this.world = args.world;
     this.input = args.input;
     this.creators = args.creators;
+    this.bus = args.bus;
+
+    // Scatter shots are handled directly in fireWeapons, no event needed
   }
 
   /**
@@ -62,8 +67,10 @@ export class TowerSystem {
   /**
    * Handle automatic weapon firing
    */
-  private handleWeaponFiring(tower: Tower, fireRateMultiplier: number): void {
-    const projectiles = tower.fireWeapons(fireRateMultiplier, this.creators);
+  private handleWeaponFiring(tower: Tower, devToolsFireRateMultiplier: number): void {
+    // Combine tower's fire rate stat with dev tools multiplier
+    const totalFireRateMultiplier = tower.stats.fireRateMult * devToolsFireRateMultiplier;
+    const projectiles = tower.fireWeapons(totalFireRateMultiplier, this.creators);
 
 
     // Add projectiles to world

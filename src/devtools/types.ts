@@ -28,7 +28,8 @@ export type ActionKey =
   | 'equipWeapon'
   | 'forceEndRun'
   | 'clearStorage'
-  | 'spawnBasicEnemy';
+  | 'spawnBasicEnemy'
+  | 'applyUpgrade';
 
 export type ToggleMap = Partial<Record<ToggleKey, boolean>>;
 export type SliderMap = Partial<Record<SliderKey, number>>;

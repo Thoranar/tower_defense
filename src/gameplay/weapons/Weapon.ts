@@ -6,6 +6,11 @@ export type FireContext = {
   origin: Vec2;
   direction: Vec2;
   creators: any; // TODO: type this properly when creators are implemented
+  towerStats?: {
+    damageMult: number;
+    weaponStats: any;
+    projectileStats: any;
+  };
 };
 
 // Abstract weapon class; defines fire method and cooldown logic

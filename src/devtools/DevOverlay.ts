@@ -15,7 +15,7 @@ type ClickableArea = {
   y: number;
   width: number;
   height: number;
-  type: 'toggle' | 'action';
+  type: 'toggle' | 'action' | 'upgradeDropdown';
   key: string;
 };
 
@@ -135,6 +135,60 @@ export class DevOverlay {
 
     yOffset += 10;
 
+    // Upgrade selector section
+    this.uiRenderer.drawText('Upgrade Selector:', panelX + 10, yOffset, '#ccc', '12px monospace');
+    yOffset += 20;
+
+    const availableUpgrades = this.devTools.getAvailableUpgrades();
+    const selectedUpgrade = this.devTools.getSelectedUpgrade();
+
+    if (availableUpgrades.length > 0) {
+      // Draw dropdown background
+      const dropdownHeight = 16;
+      this.uiRenderer.drawRect(panelX + 15, yOffset - 2, this.panelWidth - 30, dropdownHeight, 'rgba(50, 50, 50, 0.9)');
+      this.uiRenderer.drawStrokeRect(panelX + 15, yOffset - 2, this.panelWidth - 30, dropdownHeight, '#666', 1);
+
+      // Add clickable area for dropdown
+      this.clickableAreas.push({
+        x: panelX + 15,
+        y: yOffset - 2,
+        width: this.panelWidth - 30,
+        height: dropdownHeight,
+        type: 'upgradeDropdown',
+        key: 'cycleUpgrade'
+      });
+
+      // Display selected upgrade (or first available)
+      const displayUpgrade = selectedUpgrade || availableUpgrades[0];
+      const upgradeText = displayUpgrade ? `${displayUpgrade} (click to cycle)` : 'None available';
+      this.uiRenderer.drawText(upgradeText, panelX + 20, yOffset, '#fff', '11px monospace');
+      yOffset += 20;
+
+      // Apply upgrade button
+      if (displayUpgrade) {
+        const buttonHeight = 16;
+        this.uiRenderer.drawRect(panelX + 15, yOffset - 2, this.panelWidth - 30, buttonHeight, 'rgba(0, 100, 200, 0.7)');
+        this.uiRenderer.drawStrokeRect(panelX + 15, yOffset - 2, this.panelWidth - 30, buttonHeight, '#4af', 1);
+
+        this.clickableAreas.push({
+          x: panelX + 15,
+          y: yOffset - 2,
+          width: this.panelWidth - 30,
+          height: buttonHeight,
+          type: 'action',
+          key: 'applyUpgrade'
+        });
+
+        this.uiRenderer.drawText(`Apply ${displayUpgrade}`, panelX + 20, yOffset, '#fff', 'bold 11px monospace');
+        yOffset += 20;
+      }
+    } else {
+      this.uiRenderer.drawText('No upgrades available', panelX + 15, yOffset, '#666', '11px monospace');
+      yOffset += 16;
+    }
+
+    yOffset += 10;
+
     // Instructions
     this.uiRenderer.drawText('Controls:', panelX + 10, yOffset, '#ccc', '12px monospace');
     yOffset += 20;
@@ -183,6 +237,19 @@ export class DevOverlay {
           // Execute the action
           this.devTools.runAction(area.key as any);
           console.log(`Executed action: ${area.key}`);
+        } else if (area.type === 'upgradeDropdown') {
+          // Cycle through available upgrades
+          const availableUpgrades = this.devTools.getAvailableUpgrades();
+          if (availableUpgrades.length > 0) {
+            const currentUpgrade = this.devTools.getSelectedUpgrade();
+            const currentIndex = availableUpgrades.indexOf(currentUpgrade);
+            const nextIndex = (currentIndex + 1) % availableUpgrades.length;
+            const nextUpgrade = availableUpgrades[nextIndex];
+            if (nextUpgrade) {
+              this.devTools.setSelectedUpgrade(nextUpgrade);
+              console.log(`Selected upgrade: ${nextUpgrade}`);
+            }
+          }
         }
 
         return true; // Click was handled

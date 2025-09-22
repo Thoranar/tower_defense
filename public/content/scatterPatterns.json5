@@ -1,0 +1,28 @@
+{
+  // Scatter shot patterns - defines angles and projectile counts for each scatter level
+  // Angles are in degrees for easier editing, converted to radians in code
+  // Each pattern defines the angular offsets from the main firing direction
+
+  "patterns": {
+    "0": {
+      "name": "Single Shot",
+      "description": "Standard single projectile",
+      "angles": [0]
+    },
+    "1": {
+      "name": "Twin Shot",
+      "description": "Two projectiles at 25° spread",
+      "angles": [-25, 25]
+    },
+    "2": {
+      "name": "Triple Shot",
+      "description": "Three projectiles: center + 25° spread",
+      "angles": [-25, 0, 25]
+    },
+    "3": {
+      "name": "Quad Shot",
+      "description": "Four projectiles: 25° and 45° spread",
+      "angles": [-45, -25, 25, 45]
+    }
+  }
+}

@@ -118,6 +118,14 @@ export const FALLBACK_REGISTRY: Registry = {
       }
     }
   },
+  scatterPatterns: {
+    patterns: {
+      "0": { name: "Single Shot", description: "Standard single projectile", angles: [0] },
+      "1": { name: "Twin Shot", description: "Two projectiles at 25° spread", angles: [-25, 25] },
+      "2": { name: "Triple Shot", description: "Three projectiles: center + 25° spread", angles: [-25, 0, 25] },
+      "3": { name: "Quad Shot", description: "Four projectiles: 25° and 45° spread", angles: [-45, -25, 25, 45] }
+    }
+  },
   config: {
     xp: { basePerLevel: 10, growthFactor: 1.2, maxLevel: 50, curve: [10, 12, 14, 17, 20] },
     cards: { draftSize: 3, rarityWeights: { common: 70, uncommon: 25, rare: 5 } },

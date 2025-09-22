@@ -30,13 +30,19 @@ export function makeCreators(registry: Registry): Creators {
       }
     },
 
-    projectile(key: string, x: number, y: number, vx: number, vy: number, damage: number, ownerId: number): Projectile {
+    projectile(key: string, x: number, y: number, vx: number, vy: number, damage: number, ownerId: number, piercing?: boolean, maxHits?: number): Projectile {
       const blueprint = registry.projectiles[key];
       if (!blueprint) {
         throw new Error(`Unknown projectile key: ${key}`);
       }
 
-      return new Projectile(x, y, vx, vy, damage, ownerId, blueprint.lifetime, blueprint.radius);
+      return new Projectile(
+        x, y, vx, vy, damage, ownerId,
+        blueprint.lifetime,
+        blueprint.radius,
+        piercing ?? blueprint.physics?.piercing ?? false,
+        maxHits ?? 1
+      );
     },
 
     enemy(key: string, pos: Vec2): Enemy {
