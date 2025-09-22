@@ -191,16 +191,21 @@ export type Registry = {
 // Simple synchronous loader for now (async loading in later milestones)
 export async function loadRegistry(): Promise<Registry> {
   try {
+    // Determine base path for GitHub Pages vs local development
+    const basePath = window.location.hostname === 'thoranar.github.io'
+      ? '/tower_defense/public/content/'
+      : './public/content/';
+
     const [projectilesResponse, weaponsResponse, enemiesResponse, bossesResponse, wavesResponse, cardsResponse, upgradesResponse, scatterPatternsResponse, configResponse] = await Promise.all([
-      fetch('./public/content/projectiles.json5'),
-      fetch('./public/content/weapons.json5'),
-      fetch('./public/content/enemies.json5'),
-      fetch('./public/content/boss.json5'),
-      fetch('./public/content/waves.json5'),
-      fetch('./public/content/cards.json5'),
-      fetch('./public/content/upgrades.json5'),
-      fetch('./public/content/scatterPatterns.json5'),
-      fetch('./public/content/config.json5')
+      fetch(`${basePath}projectiles.json5`),
+      fetch(`${basePath}weapons.json5`),
+      fetch(`${basePath}enemies.json5`),
+      fetch(`${basePath}boss.json5`),
+      fetch(`${basePath}waves.json5`),
+      fetch(`${basePath}cards.json5`),
+      fetch(`${basePath}upgrades.json5`),
+      fetch(`${basePath}scatterPatterns.json5`),
+      fetch(`${basePath}config.json5`)
     ]);
 
     if (!projectilesResponse.ok || !weaponsResponse.ok || !enemiesResponse.ok || !bossesResponse.ok || !wavesResponse.ok || !cardsResponse.ok || !upgradesResponse.ok || !scatterPatternsResponse.ok || !configResponse.ok) {
