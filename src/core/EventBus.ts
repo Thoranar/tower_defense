@@ -11,7 +11,10 @@ export type EventKey =
   | "RunEnded"
   | "BossSpawned"
   | "TowerDamaged"
-  | "CollisionsDetected";
+  | "CollisionsDetected"
+  | "StatModification"
+  | "EquipWeapon"
+  | "UpgradeApplied";
 
 export class EventBus {
   private listeners: Map<EventKey, Array<(payload: any) => void>> = new Map();

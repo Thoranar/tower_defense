@@ -10,7 +10,9 @@ export type ToggleKey =
   | 'collisionMarkers'
   | 'hitLogs'
   | 'invincibleTower'
-  | 'draftPreview';
+  | 'draftPreview'
+  | 'showUpgradeInspector'
+  | 'showStatOverlays';
 
 export type SliderKey =
   | 'fireRateMult'

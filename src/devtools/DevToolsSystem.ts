@@ -27,6 +27,8 @@ export class DevToolsSystem {
     this.toggles.hitLogs = false;
     this.toggles.invincibleTower = false;
     this.toggles.draftPreview = false;
+    this.toggles.showUpgradeInspector = false;
+    this.toggles.showStatOverlays = false;
 
     // Default slider values
     this.sliders.fireRateMult = 1.0;

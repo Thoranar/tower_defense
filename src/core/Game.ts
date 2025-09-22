@@ -11,12 +11,16 @@ import { makeCreators, Creators } from '../data/creators.js';
 import { Projectile } from '../gameplay/Projectile.js';
 import { Enemy } from '../gameplay/Enemy.js';
 import { loadRegistry, Registry } from '../data/registry.js';
+import { FALLBACK_REGISTRY } from '../data/fallbackRegistry.js';
+import { TowerSystem } from '../systems/TowerSystem.js';
+import { RenderSystem } from '../systems/RenderSystem.js';
 import { SpawnSystem } from '../systems/SpawnSystem.js';
 import { MovementSystem } from '../systems/MovementSystem.js';
 import { CollisionSystem } from '../systems/CollisionSystem.js';
 import { CombatSystem } from '../systems/CombatSystem.js';
 import { ExperienceSystem } from '../systems/ExperienceSystem.js';
 import { CardDraftSystem } from '../systems/CardDraftSystem.js';
+import { UpgradeSystem } from '../systems/UpgradeSystem.js';
 import { CardOverlayView } from '../ui/CardOverlayView.js';
 import { EventBus } from './EventBus.js';
 
@@ -48,7 +52,10 @@ export class Game {
   private combatSystem: CombatSystem | null = null;
   private experienceSystem: ExperienceSystem | null = null;
   private cardDraftSystem: CardDraftSystem | null = null;
+  private upgradeSystem: UpgradeSystem | null = null;
   private cardOverlay: CardOverlayView;
+  private towerSystem: TowerSystem | null = null;
+  private renderSystem: RenderSystem | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -81,49 +88,8 @@ export class Game {
       console.log('Registry loaded successfully');
     } catch (error) {
       console.error('Failed to load registry:', error);
-      // Use fallback for testing
-      this.registry = {
-        projectiles: {
-          bullet: {
-            name: "Bullet", description: "Standard projectile", speed: 200, lifetime: 3.0, radius: 3,
-            visual: { type: "circle", color: "#ffff00", size: 6 },
-            physics: { piercing: false, gravity: false, bounce: false },
-            effects: { trail: false, explosion: false }
-          }
-        },
-        weapons: {
-          cannon: {
-            name: "Cannon", description: "Standard cannon", type: "cannon", projectileKey: "bullet",
-            baseCooldown: 1.0, baseUpgradeStats: { damage: 10, fireRate: 1.0, range: 300 },
-            levelScaling: { damage: 1.2, fireRate: 1.1, range: 1.05 }, maxLevel: 5, rarity: "common"
-          }
-        },
-        enemies: {
-          basic: {
-            hp: 3, maxHp: 3, speed: 60, xp: 1, radius: 12,
-            behaviors: ["MoveDown"], color: "#FF6B6B"
-          }
-        },
-        waves: [{
-          timeStart: 0, timeEnd: 60, spawnInterval: 2.0,
-          enemies: [{ key: "basic", weight: 100 }]
-        }],
-        cards: {
-          damage_boost: {
-            name: "Damage Boost", description: "Increase tower damage by 25%", rarity: "common",
-            weight: 100, upgradeKey: "damage_boost", visual: { icon: "⚔️", color: "#ff6b6b" }
-          }
-        },
-        config: {
-          xp: { basePerLevel: 10, growthFactor: 1.2, maxLevel: 50, curve: [10, 12, 14, 17, 20] },
-          cards: { draftSize: 3, rarityWeights: { common: 70, uncommon: 25, rare: 5 } },
-          upgrades: { maxSlots: 5, maxLevelPerUpgrade: 5 },
-          tower: { baseHealth: 100, baseDamage: 10, baseFireRate: 1.0 },
-          difficulty: { enemySpawnScale: 1.0, enemyHealthScale: 1.0, bossHealthScale: 1.0 },
-          timing: { runDuration: 600, bossWarning: 570, bossSpawn: 600 },
-          prestige: { baseReward: 1, timeBonus: 0.1, killBonus: 0.01 }
-        }
-      };
+      console.log('Using fallback registry for development');
+      this.registry = FALLBACK_REGISTRY;
       this.creators = makeCreators(this.registry);
       this.initializeSystems();
     }
@@ -141,7 +107,8 @@ export class Game {
     this.devTools.registerGameActions({
       resetRun: () => this.resetRun(),
       spawnBasicEnemy: () => this.spawnEnemyManually('basic', 1),
-      grantXp: () => this.grantXpManually(10)
+      grantXp: () => this.grantXpManually(10),
+      getUpgradeState: () => this.upgradeSystem?.getUpgradeState() || { levels: {}, slots: { used: 0, max: 5 }, canSelectAny: false }
     });
 
     this.startRun(); // Auto-start a run for milestone 3
@@ -184,6 +151,25 @@ export class Game {
       bus: this.bus,
       reg: this.registry
     });
+
+    this.upgradeSystem = new UpgradeSystem({
+      bus: this.bus,
+      reg: this.registry!,
+      creators: this.creators
+    });
+
+    this.towerSystem = new TowerSystem({
+      world: this.world,
+      input: this.input,
+      creators: this.creators
+    });
+
+    this.renderSystem = new RenderSystem({
+      renderer: this.renderer,
+      uiRenderer: this.uiRenderer,
+      world: this.world,
+      hud: this.hud
+    });
   }
 
   start(): void {
@@ -217,167 +203,134 @@ export class Game {
   };
 
   private update(deltaTime: number): void {
-    // Handle mouse clicks for overlays
-    const mouseClick = this.input.getMouseClick();
-    if (mouseClick.clicked) {
-      // Check card overlay first (higher priority)
-      const cardClicked = this.cardOverlay.handleClick(mouseClick.x, mouseClick.y);
-      if (cardClicked && this.cardDraftSystem) {
-        this.cardDraftSystem.choose(cardClicked);
-      } else {
-        // Check dev overlay if no card was clicked
-        const handled = this.devOverlay.handleClick(mouseClick.x, mouseClick.y);
-        if (handled) {
-          // Click was handled by DevOverlay, don't process it further
-        }
-      }
-    }
+    // Handle input for overlays
+    this.handleOverlayInput();
 
     // Update DevTools overlay
     this.devOverlay.update(deltaTime);
 
     if (this.inRun) {
-      const tower = this.getTower();
-      if (tower) {
-        // Handle tower rotation input
-        const rotationInput = this.input.getTurretRotationInput();
-        if (rotationInput !== 0) {
-          const rotationSpeed = 2.0; // radians per second
-          tower.setTurretAngle(tower.turretAngle + rotationInput * rotationSpeed * deltaTime);
-        }
-
-        // Mouse aiming (override keyboard if mouse is used)
-        if (this.input.isMouseDown() || this.devTools.isOn('showInput')) {
-          const mouseAngle = this.input.getAngleToMouse(tower.pos.x, tower.pos.y);
-          tower.setTurretAngle(mouseAngle);
-        }
-
-        // Handle weapon firing (automatic for Milestone 3)
-        // Apply fire rate multiplier from DevTools
+      // Update tower system (input, firing, tower state)
+      if (this.towerSystem) {
         const fireRateMultiplier = this.devTools.getSlider('fireRateMult');
-        const projectiles = tower.fireWeapons(fireRateMultiplier, this.creators);
-        for (const projectile of projectiles) {
-          this.world.add(projectile);
-        }
-
-        // Update tower
-        tower.update(deltaTime);
+        this.towerSystem.update(deltaTime, fireRateMultiplier);
       }
 
-      // Update systems
-      if (this.spawnSystem) {
-        this.spawnSystem.update(deltaTime);
-      }
-
-      if (this.movementSystem) {
-        this.movementSystem.update(deltaTime);
-      }
-
-      if (this.collisionSystem) {
-        this.collisionSystem.update(deltaTime);
-      }
-
-      if (this.combatSystem) {
-        this.combatSystem.clearOldDamageEvents();
-        // Sync invincible tower dev tool state
-        this.combatSystem.setTowerInvincible(this.devTools.isOn('invincibleTower'));
-      }
+      // Update game systems
+      this.updateGameSystems(deltaTime);
 
       // Update all entities
-      for (const entity of this.world.all()) {
-        if (entity.update) {
-          entity.update(deltaTime);
-        }
-      }
+      this.updateAllEntities(deltaTime);
 
       // Process world updates (add/remove entities)
       this.world.update();
     }
   }
 
-  private render(): void {
-    // Clear and render background
-    this.renderer.begin();
-    this.renderer.end();
+  /**
+   * Handle mouse clicks for UI overlays
+   */
+  private handleOverlayInput(): void {
+    const mouseClick = this.input.getMouseClick();
+    if (!mouseClick.clicked) return;
 
-    // Render UI
-    this.uiRenderer.begin();
+    // Check card overlay first (higher priority)
+    const cardClicked = this.cardOverlay.handleClick(mouseClick.x, mouseClick.y);
+    if (cardClicked && this.cardDraftSystem) {
+      this.cardDraftSystem.choose(cardClicked);
+    } else {
+      // Check dev overlay if no card was clicked
+      this.devOverlay.handleClick(mouseClick.x, mouseClick.y);
+    }
+  }
 
-    // Render entities if in run
-    if (this.inRun) {
-      const tower = this.getTower();
-      if (tower) {
-        this.uiRenderer.drawTower(tower);
-
-        // Render HUD
-        const hudModel = this.hud.snapshot(tower, this.clock, this.experienceSystem || undefined);
-        this.uiRenderer.drawHUD(hudModel);
-      }
-
-      // Render enemies and projectiles
-      for (const entity of this.world.all()) {
-        if (entity instanceof Projectile) {
-          this.uiRenderer.drawProjectile(entity);
-        } else if (entity instanceof Enemy) {
-          this.uiRenderer.drawEnemy(entity);
-        }
-      }
-
-      // Render floating damage numbers
-      if (this.combatSystem) {
-        const damageEvents = this.combatSystem.getDamageEvents();
-        const now = Date.now();
-        const maxAge = 3000; // 3 seconds
-
-        for (const event of damageEvents) {
-          const age = now - event.timestamp;
-          if (age < maxAge) {
-            this.uiRenderer.drawFloatingDamage(
-              event.position.x,
-              event.position.y,
-              event.amount,
-              age,
-              maxAge
-            );
-          }
-        }
-      }
+  /**
+   * Update all game systems in the proper order
+   */
+  private updateGameSystems(deltaTime: number): void {
+    if (this.spawnSystem) {
+      this.spawnSystem.update(deltaTime);
     }
 
-    // Show FPS if enabled in DevTools
-    if (this.devTools.isOn('showFps')) {
-      this.uiRenderer.drawFPS(this.clock.getFPS());
+    if (this.movementSystem) {
+      this.movementSystem.update(deltaTime);
+    }
+
+    if (this.collisionSystem) {
+      this.collisionSystem.update(deltaTime);
+    }
+
+    if (this.combatSystem) {
+      this.combatSystem.clearOldDamageEvents();
+      // Sync invincible tower dev tool state
+      this.combatSystem.setTowerInvincible(this.devTools.isOn('invincibleTower'));
+    }
+  }
+
+  /**
+   * Update all entities in the world
+   */
+  private updateAllEntities(deltaTime: number): void {
+    for (const entity of this.world.all()) {
+      if (entity.update) {
+        entity.update(deltaTime);
+      }
+    }
+  }
+
+  private render(): void {
+    // Delegate core rendering to RenderSystem
+    if (this.renderSystem) {
+      const tower = this.getTower();
+      this.renderSystem.render({
+        inRun: this.inRun,
+        tower: tower,
+        clock: this.clock,
+        experienceSystem: this.experienceSystem || undefined,
+        combatSystem: this.combatSystem || undefined,
+        showFps: this.devTools.isOn('showFps')
+      });
     }
 
     // Render debug overlays and info (delegated to DevOverlay)
-    this.devOverlay.renderDebugOverlays();
-    this.devOverlay.renderInputDebug(this.input, this.getTower());
-
-    // Render collision markers and hit logs if in run
-    if (this.inRun && this.collisionSystem && this.combatSystem) {
-      this.devOverlay.renderCollisionMarkers(this.collisionSystem.getCollisionPairs());
-      this.devOverlay.renderHitLogs(this.combatSystem.getDamageEvents());
-    }
-
-    // Render projectile debug info if enabled
-    if (this.inRun) {
-      const projectiles = this.world.query((entity): entity is Projectile => entity instanceof Projectile);
-      this.devOverlay.renderProjectileDebug(projectiles);
-    }
-
-    // Render entity counts if in run
-    if (this.inRun) {
-      const counts = this.getEntityCounts();
-      this.devOverlay.renderEntityCounts(counts);
-    }
+    this.renderDebugOverlays();
 
     // Render card overlay (on top of everything)
     this.cardOverlay.render();
 
     // Render DevTools overlay last (on top)
     this.devOverlay.render();
+  }
 
-    this.uiRenderer.end();
+  /**
+   * Render debug overlays via DevOverlay
+   */
+  private renderDebugOverlays(): void {
+    this.devOverlay.renderDebugOverlays();
+    this.devOverlay.renderInputDebug(this.input, this.getTower());
+
+    if (this.inRun && this.collisionSystem && this.combatSystem) {
+      this.devOverlay.renderCollisionMarkers(this.collisionSystem.getCollisionPairs());
+      this.devOverlay.renderHitLogs(this.combatSystem.getDamageEvents());
+    }
+
+    if (this.inRun) {
+      const projectiles = this.world.query((entity): entity is Projectile => entity instanceof Projectile);
+      this.devOverlay.renderProjectileDebug(projectiles);
+
+      const counts = this.getEntityCounts();
+      this.devOverlay.renderEntityCounts(counts);
+
+      if (this.upgradeSystem) {
+        const upgradeState = this.upgradeSystem.getUpgradeState();
+        this.devOverlay.renderUpgradeInspector(upgradeState);
+      }
+
+      const tower = this.getTower();
+      if (tower) {
+        this.devOverlay.renderStatOverlays(tower);
+      }
+    }
   }
 
   startRun(): void {
@@ -392,11 +345,7 @@ export class Game {
     this.world.clear();
     const centerX = this.canvas.width / 2;
     const groundY = this.renderer.getGroundY();
-    const tower = new Tower(centerX, groundY - 30); // 30 pixels above ground
-
-    // Equip tower with a cannon weapon for Milestone 3
-    const cannon = this.creators.weapon('cannon', 1);
-    tower.addWeapon(cannon);
+    const tower = new Tower(centerX, groundY - 30, this.bus); // 30 pixels above ground, pass EventBus
 
     this.world.add(tower);
 
@@ -406,6 +355,20 @@ export class Game {
     }
     if (this.experienceSystem) {
       this.experienceSystem.reset();
+    }
+    if (this.upgradeSystem) {
+      this.upgradeSystem.reset();
+    }
+
+    // Reset tower to base stats
+    tower.reset();
+
+    // Equip tower with a cannon weapon for Milestone 3 (AFTER reset)
+    try {
+      const cannon = this.creators.weapon('cannon', 1);
+      tower.addWeapon(cannon);
+    } catch (error) {
+      console.error('Failed to create or add weapon:', error);
     }
 
     this.inRun = true;
@@ -443,6 +406,12 @@ export class Game {
 
   /** Helper method to get the tower from the world */
   private getTower(): Tower | null {
+    // Delegate to TowerSystem if available
+    if (this.towerSystem) {
+      return this.towerSystem.getTowerForDisplay();
+    }
+
+    // Fallback to direct world query
     const towers = this.world.query((entity): entity is Tower => entity instanceof Tower);
     return towers.length > 0 ? towers[0] ?? null : null;
   }
@@ -463,8 +432,12 @@ export class Game {
   resize(width: number, height: number): void {
     this.canvas.width = width;
     this.canvas.height = height;
-    this.renderer.resize(width, height);
-    this.uiRenderer.resize(width, height);
+
+    // Delegate to RenderSystem
+    if (this.renderSystem) {
+      this.renderSystem.resize(width, height);
+    }
+
     this.devOverlay.resize(width, height);
     this.cardOverlay.resize(width, height);
   }

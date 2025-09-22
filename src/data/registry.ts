@@ -74,6 +74,23 @@ export type CardBlueprint = {
   };
 };
 
+export type UpgradeEffect = {
+  op: 'statAdd' | 'statMult' | 'statSet' | 'equipWeapon';
+  target?: string;
+  value?: number | boolean;
+  weaponKey?: string;
+  level?: number;
+};
+
+export type UpgradeBlueprint = {
+  name: string;
+  description: string;
+  maxLevel: number;
+  icon: string;
+  color: string;
+  effects: Record<string, UpgradeEffect[]>;
+};
+
 export type GameConfig = {
   xp: {
     basePerLevel: number;
@@ -117,31 +134,34 @@ export type Registry = {
   enemies: Record<string, EnemyBlueprint>;
   waves: WaveBlueprint[];
   cards: Record<string, CardBlueprint>;
+  upgrades: Record<string, UpgradeBlueprint>;
   config: GameConfig;
 };
 
 // Simple synchronous loader for now (async loading in later milestones)
 export async function loadRegistry(): Promise<Registry> {
   try {
-    const [projectilesResponse, weaponsResponse, enemiesResponse, wavesResponse, cardsResponse, configResponse] = await Promise.all([
+    const [projectilesResponse, weaponsResponse, enemiesResponse, wavesResponse, cardsResponse, upgradesResponse, configResponse] = await Promise.all([
       fetch('/public/content/projectiles.json5'),
       fetch('/public/content/weapons.json5'),
       fetch('/public/content/enemies.json5'),
       fetch('/public/content/waves.json5'),
       fetch('/public/content/cards.json5'),
+      fetch('/public/content/upgrades.json5'),
       fetch('/public/content/config.json5')
     ]);
 
-    if (!projectilesResponse.ok || !weaponsResponse.ok || !enemiesResponse.ok || !wavesResponse.ok || !cardsResponse.ok || !configResponse.ok) {
+    if (!projectilesResponse.ok || !weaponsResponse.ok || !enemiesResponse.ok || !wavesResponse.ok || !cardsResponse.ok || !upgradesResponse.ok || !configResponse.ok) {
       throw new Error('Failed to load content files');
     }
 
-    const [projectilesText, weaponsText, enemiesText, wavesText, cardsText, configText] = await Promise.all([
+    const [projectilesText, weaponsText, enemiesText, wavesText, cardsText, upgradesText, configText] = await Promise.all([
       projectilesResponse.text(),
       weaponsResponse.text(),
       enemiesResponse.text(),
       wavesResponse.text(),
       cardsResponse.text(),
+      upgradesResponse.text(),
       configResponse.text()
     ]);
 
@@ -199,6 +219,7 @@ export async function loadRegistry(): Promise<Registry> {
     const enemies = JSON.parse(cleanJson5(enemiesText));
     const waves = JSON.parse(cleanJson5(wavesText));
     const cards = JSON.parse(cleanJson5(cardsText));
+    const upgrades = JSON.parse(cleanJson5(upgradesText));
     const config = JSON.parse(cleanJson5(configText));
 
     console.log('Registry loaded from JSON5 files:');
@@ -208,6 +229,7 @@ export async function loadRegistry(): Promise<Registry> {
     console.log('- Enemy types:', Object.keys(enemies));
     console.log('- Wave count:', waves.length);
     console.log('- Card types:', Object.keys(cards));
+    console.log('- Upgrade types:', Object.keys(upgrades));
     console.log('- XP base per level:', config.xp?.basePerLevel);
 
     return {
@@ -216,6 +238,7 @@ export async function loadRegistry(): Promise<Registry> {
       enemies,
       waves,
       cards,
+      upgrades,
       config
     };
   } catch (error) {
@@ -274,6 +297,18 @@ export async function loadRegistry(): Promise<Registry> {
           weight: 100,
           upgradeKey: "damage_boost",
           visual: { icon: "⚔️", color: "#ff6b6b" }
+        }
+      },
+      upgrades: {
+        damage_boost: {
+          name: "Damage Amplifier",
+          description: "Increases tower damage output",
+          maxLevel: 5,
+          icon: "⚔️",
+          color: "#ff6b6b",
+          effects: {
+            "1": [{ "op": "statAdd", "target": "tower.damageMult", "value": 0.25 }]
+          }
         }
       },
       config: {

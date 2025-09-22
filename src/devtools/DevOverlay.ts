@@ -71,7 +71,9 @@ export class DevOverlay {
       { key: 'collisionMarkers', label: 'Collision Markers', shortcut: '' },
       { key: 'hitLogs', label: 'Hit Logs', shortcut: '' },
       { key: 'invincibleTower', label: 'Invincible Tower', shortcut: '' },
-      { key: 'draftPreview', label: 'Draft Preview', shortcut: '' }
+      { key: 'draftPreview', label: 'Draft Preview', shortcut: '' },
+      { key: 'showUpgradeInspector', label: 'Upgrade Inspector', shortcut: '' },
+      { key: 'showStatOverlays', label: 'Stat Overlays', shortcut: '' }
     ];
 
     for (const toggle of toggleEntries) {
@@ -348,5 +350,78 @@ export class DevOverlay {
       this.uiRenderer.drawText(logText, x, y, color, '10px monospace');
       y += 12;
     }
+  }
+
+  /** Render upgrade inspector panel showing selected upgrades. */
+  renderUpgradeInspector(upgradeState: any): void {
+    if (!this.devTools.isOn('showUpgradeInspector')) return;
+
+    const panelX = 10;
+    const panelY = 120;
+    const panelWidth = 300;
+    const lineHeight = 20;
+    let currentY = panelY;
+
+    // Background
+    this.uiRenderer.drawRect(panelX, panelY, panelWidth, 200, 'rgba(0, 0, 0, 0.8)');
+    this.uiRenderer.drawStrokeRect(panelX, panelY, panelWidth, 200, '#444', 2);
+
+    // Title
+    this.uiRenderer.drawText('Upgrade Inspector', panelX + 10, currentY + 20, '#fff', 'bold 16px monospace');
+    currentY += 35;
+
+    // Slots info
+    const slotsText = `Slots: ${upgradeState.slots.used}/${upgradeState.slots.max}`;
+    this.uiRenderer.drawText(slotsText, panelX + 10, currentY, '#ccc', '14px monospace');
+    currentY += lineHeight;
+
+    // Selected upgrades
+    if (Object.keys(upgradeState.levels).length === 0) {
+      this.uiRenderer.drawText('No upgrades selected', panelX + 10, currentY, '#888', '14px monospace');
+    } else {
+      for (const [key, level] of Object.entries(upgradeState.levels)) {
+        const upgradeText = `${key}: Level ${level}`;
+        this.uiRenderer.drawText(upgradeText, panelX + 10, currentY, '#0f0', '14px monospace');
+        currentY += lineHeight;
+      }
+    }
+
+    currentY += 10;
+    const canSelectText = `Can select more: ${upgradeState.canSelectAny ? 'Yes' : 'No'}`;
+    const color = upgradeState.canSelectAny ? '#0f0' : '#f80';
+    this.uiRenderer.drawText(canSelectText, panelX + 10, currentY, color, '14px monospace');
+  }
+
+  /** Render stat overlays showing derived multipliers next to tower. */
+  renderStatOverlays(tower: any): void {
+    if (!this.devTools.isOn('showStatOverlays')) return;
+
+    const stats = tower.getDerivedStats();
+    const towerX = tower.pos.x;
+    const towerY = tower.pos.y;
+
+    // Position overlays to the right of the tower
+    const overlayX = towerX + 40;
+    let overlayY = towerY - 60;
+    const lineHeight = 16;
+
+    // Background for readability
+    this.uiRenderer.drawRect(overlayX - 5, overlayY - 5, 150, 80, 'rgba(0, 0, 0, 0.7)');
+    this.uiRenderer.drawStrokeRect(overlayX - 5, overlayY - 5, 150, 80, '#444', 1);
+
+    // HP
+    this.uiRenderer.drawText(`HP: ${stats.hp}/${stats.maxHp}`, overlayX, overlayY, '#0f0', '12px monospace');
+    overlayY += lineHeight;
+
+    // Damage multiplier
+    this.uiRenderer.drawText(`Damage: ${stats.damageMultDisplay}`, overlayX, overlayY, '#f66', '12px monospace');
+    overlayY += lineHeight;
+
+    // Fire rate multiplier
+    this.uiRenderer.drawText(`Fire Rate: ${stats.fireRateMultDisplay}`, overlayX, overlayY, '#ff6', '12px monospace');
+    overlayY += lineHeight;
+
+    // Regeneration
+    this.uiRenderer.drawText(`Regen: ${stats.regenDisplay}`, overlayX, overlayY, '#6f6', '12px monospace');
   }
 }
