@@ -192,15 +192,15 @@ export type Registry = {
 export async function loadRegistry(): Promise<Registry> {
   try {
     const [projectilesResponse, weaponsResponse, enemiesResponse, bossesResponse, wavesResponse, cardsResponse, upgradesResponse, scatterPatternsResponse, configResponse] = await Promise.all([
-      fetch('/public/content/projectiles.json5'),
-      fetch('/public/content/weapons.json5'),
-      fetch('/public/content/enemies.json5'),
-      fetch('/public/content/boss.json5'),
-      fetch('/public/content/waves.json5'),
-      fetch('/public/content/cards.json5'),
-      fetch('/public/content/upgrades.json5'),
-      fetch('/public/content/scatterPatterns.json5'),
-      fetch('/public/content/config.json5')
+      fetch('./public/content/projectiles.json5'),
+      fetch('./public/content/weapons.json5'),
+      fetch('./public/content/enemies.json5'),
+      fetch('./public/content/boss.json5'),
+      fetch('./public/content/waves.json5'),
+      fetch('./public/content/cards.json5'),
+      fetch('./public/content/upgrades.json5'),
+      fetch('./public/content/scatterPatterns.json5'),
+      fetch('./public/content/config.json5')
     ]);
 
     if (!projectilesResponse.ok || !weaponsResponse.ok || !enemiesResponse.ok || !bossesResponse.ok || !wavesResponse.ok || !cardsResponse.ok || !upgradesResponse.ok || !scatterPatternsResponse.ok || !configResponse.ok) {
