@@ -82,6 +82,18 @@ export class UIRenderer {
     this.drawBar(hpBarX, hpBarY, hpBarWidth, hpBarHeight, hud.hp / hud.maxHp, '#600', '#f00');
     this.drawText(`${Math.ceil(hud.hp)}/${hud.maxHp}`, hpBarX + hpBarWidth + 10, hpBarY + 2, '#fff', '12px monospace');
 
+    // XP bar (bottom-left, below health)
+    if (hud.xp) {
+      const xpBarX = 20;
+      const xpBarY = this.height - 30;
+      const xpBarWidth = 200;
+      const xpBarHeight = 16;
+
+      this.drawText(`Level ${hud.xp.level}`, xpBarX, xpBarY - 18, '#fff', '12px monospace');
+      this.drawBar(xpBarX, xpBarY, xpBarWidth, xpBarHeight, hud.xp.progress, '#333', '#4ecdc4');
+      this.drawText(`${hud.xp.xp}/${hud.xp.xpToNext}`, xpBarX + xpBarWidth + 10, xpBarY + 2, '#fff', '10px monospace');
+    }
+
     // Timer (top-center)
     const minutes = Math.floor(hud.timeSec / 60);
     const seconds = Math.floor(hud.timeSec % 60);

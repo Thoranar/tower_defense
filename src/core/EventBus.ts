@@ -6,6 +6,8 @@ export type EventKey =
   | "EnemyKilled"
   | "LevelUp"
   | "CardChosen"
+  | "CardDraftActive"
+  | "CardDraftClosed"
   | "RunEnded"
   | "BossSpawned"
   | "TowerDamaged"

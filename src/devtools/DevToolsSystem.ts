@@ -26,6 +26,7 @@ export class DevToolsSystem {
     this.toggles.collisionMarkers = false;
     this.toggles.hitLogs = false;
     this.toggles.invincibleTower = false;
+    this.toggles.draftPreview = false;
 
     // Default slider values
     this.sliders.fireRateMult = 1.0;
@@ -114,6 +115,20 @@ export class DevToolsSystem {
           this.gameActions.resetRun();
         } else {
           console.log('Reset run requested (no handler)');
+        }
+        break;
+      case 'spawnBasicEnemy':
+        if (this.gameActions.spawnBasicEnemy) {
+          this.gameActions.spawnBasicEnemy();
+        } else {
+          console.log('Spawn basic enemy requested (no handler)');
+        }
+        break;
+      case 'grantXp':
+        if (this.gameActions.grantXp) {
+          this.gameActions.grantXp();
+        } else {
+          console.log('Grant XP requested (no handler)');
         }
         break;
       case 'clearStorage':

@@ -2,5 +2,70 @@
 // Contains all cards shown during level-up with titles, descriptions, and outcomes
 // Links to upgrade system for card selection results
 {
-  // TODO: Define card blueprints and selection outcomes
+  "damage_boost": {
+    "name": "Damage Boost",
+    "description": "Increase tower damage by 25%",
+    "rarity": "common",
+    "weight": 100,
+    "upgradeKey": "damage_boost",
+    "visual": {
+      "icon": "⚔️",
+      "color": "#ff6b6b"
+    }
+  },
+  "fire_rate": {
+    "name": "Rapid Fire",
+    "description": "Increase fire rate by 20%",
+    "rarity": "common",
+    "weight": 100,
+    "upgradeKey": "fire_rate",
+    "visual": {
+      "icon": "🔥",
+      "color": "#ffa500"
+    }
+  },
+  "tower_health": {
+    "name": "Reinforced Armor",
+    "description": "Increase tower HP by 50",
+    "rarity": "common",
+    "weight": 80,
+    "upgradeKey": "tower_health",
+    "visual": {
+      "icon": "🛡️",
+      "color": "#4ecdc4"
+    }
+  },
+  "projectile_speed": {
+    "name": "Velocity Boost",
+    "description": "Increase projectile speed by 30%",
+    "rarity": "uncommon",
+    "weight": 60,
+    "upgradeKey": "projectile_speed",
+    "visual": {
+      "icon": "⚡",
+      "color": "#45b7d1"
+    }
+  },
+  "multi_shot": {
+    "name": "Multi-Shot",
+    "description": "Fire 2 additional projectiles",
+    "rarity": "rare",
+    "weight": 30,
+    "upgradeKey": "multi_shot",
+    "visual": {
+      "icon": "📡",
+      "color": "#9b59b6"
+    }
+  },
+  "piercing_shot": {
+    "name": "Piercing Rounds",
+    "description": "Projectiles pierce through enemies",
+    "rarity": "rare",
+    "weight": 25,
+    "upgradeKey": "piercing_shot",
+    "visual": {
+      "icon": "🎯",
+      "color": "#e74c3c"
+    }
+  }
 }

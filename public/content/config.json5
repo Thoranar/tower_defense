@@ -2,5 +2,63 @@
 // Contains XP curves, timing rules, upgrade limits, and prestige settings
 // Central location for all game balance and rule parameters
 {
-  // TODO: Define game configuration parameters
+  "xp": {
+    "basePerLevel": 10,        // XP required for level 1 -> 2
+    "growthFactor": 1.2,       // Each level requires 20% more XP
+    "maxLevel": 50,            // Hard cap on player level
+    "curve": [                 // Precomputed XP thresholds for first 20 levels
+      10,   // Level 1 -> 2
+      12,   // Level 2 -> 3
+      14,   // Level 3 -> 4
+      17,   // Level 4 -> 5
+      20,   // Level 5 -> 6
+      24,   // Level 6 -> 7
+      29,   // Level 7 -> 8
+      35,   // Level 8 -> 9
+      42,   // Level 9 -> 10
+      50,   // Level 10 -> 11
+      60,   // Level 11 -> 12
+      72,   // Level 12 -> 13
+      86,   // Level 13 -> 14
+      103,  // Level 14 -> 15
+      124,  // Level 15 -> 16
+      149,  // Level 16 -> 17
+      179,  // Level 17 -> 18
+      215,  // Level 18 -> 19
+      258,  // Level 19 -> 20
+      310   // Level 20 -> 21
+    ]
+  },
+  "cards": {
+    "draftSize": 3,            // Number of cards shown per draft
+    "rarityWeights": {         // Rarity distribution for card drafts
+      "common": 70,
+      "uncommon": 25,
+      "rare": 5
+    }
+  },
+  "upgrades": {
+    "maxSlots": 5,             // Maximum upgrade slots
+    "maxLevelPerUpgrade": 5    // Maximum level per individual upgrade
+  },
+  "tower": {
+    "baseHealth": 100,         // Starting tower HP
+    "baseDamage": 10,          // Starting weapon damage
+    "baseFireRate": 1.0        // Starting fire rate (shots per second)
+  },
+  "difficulty": {
+    "enemySpawnScale": 1.0,    // Enemy spawn rate multiplier
+    "enemyHealthScale": 1.0,   // Enemy HP multiplier
+    "bossHealthScale": 1.0     // Boss HP multiplier
+  },
+  "timing": {
+    "runDuration": 600,        // 10 minutes in seconds
+    "bossWarning": 570,        // Boss warning at 9:30
+    "bossSpawn": 600           // Boss spawns at 10:00
+  },
+  "prestige": {
+    "baseReward": 1,           // Base prestige points per run
+    "timeBonus": 0.1,          // Bonus per minute survived
+    "killBonus": 0.01          // Bonus per enemy killed
+  }
 }

@@ -15,6 +15,9 @@ import { SpawnSystem } from '../systems/SpawnSystem.js';
 import { MovementSystem } from '../systems/MovementSystem.js';
 import { CollisionSystem } from '../systems/CollisionSystem.js';
 import { CombatSystem } from '../systems/CombatSystem.js';
+import { ExperienceSystem } from '../systems/ExperienceSystem.js';
+import { CardDraftSystem } from '../systems/CardDraftSystem.js';
+import { CardOverlayView } from '../ui/CardOverlayView.js';
 import { EventBus } from './EventBus.js';
 
 // Main game loop; orchestrates systems and updates world
@@ -43,6 +46,9 @@ export class Game {
   private movementSystem: MovementSystem | null = null;
   private collisionSystem: CollisionSystem | null = null;
   private combatSystem: CombatSystem | null = null;
+  private experienceSystem: ExperienceSystem | null = null;
+  private cardDraftSystem: CardDraftSystem | null = null;
+  private cardOverlay: CardOverlayView;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -61,6 +67,7 @@ export class Game {
     this.world = new World();
     this.hud = new Hud();
     this.bus = new EventBus();
+    this.cardOverlay = new CardOverlayView(this.uiRenderer, canvas.width, canvas.height);
   }
 
   async init(): Promise<void> {
@@ -100,16 +107,41 @@ export class Game {
         waves: [{
           timeStart: 0, timeEnd: 60, spawnInterval: 2.0,
           enemies: [{ key: "basic", weight: 100 }]
-        }]
+        }],
+        cards: {
+          damage_boost: {
+            name: "Damage Boost", description: "Increase tower damage by 25%", rarity: "common",
+            weight: 100, upgradeKey: "damage_boost", visual: { icon: "⚔️", color: "#ff6b6b" }
+          }
+        },
+        config: {
+          xp: { basePerLevel: 10, growthFactor: 1.2, maxLevel: 50, curve: [10, 12, 14, 17, 20] },
+          cards: { draftSize: 3, rarityWeights: { common: 70, uncommon: 25, rare: 5 } },
+          upgrades: { maxSlots: 5, maxLevelPerUpgrade: 5 },
+          tower: { baseHealth: 100, baseDamage: 10, baseFireRate: 1.0 },
+          difficulty: { enemySpawnScale: 1.0, enemyHealthScale: 1.0, bossHealthScale: 1.0 },
+          timing: { runDuration: 600, bossWarning: 570, bossSpawn: 600 },
+          prestige: { baseReward: 1, timeBonus: 0.1, killBonus: 0.01 }
+        }
       };
       this.creators = makeCreators(this.registry);
       this.initializeSystems();
     }
 
+    // Set up card system event listeners
+    this.bus.on('CardDraftActive', (data: any) => {
+      this.cardOverlay.show(data.choices);
+    });
+
+    this.bus.on('CardDraftClosed', () => {
+      this.cardOverlay.hide();
+    });
+
     // Register DevTools actions
     this.devTools.registerGameActions({
       resetRun: () => this.resetRun(),
-      spawnBasicEnemy: () => this.spawnEnemyManually('basic', 1)
+      spawnBasicEnemy: () => this.spawnEnemyManually('basic', 1),
+      grantXp: () => this.grantXpManually(10)
     });
 
     this.startRun(); // Auto-start a run for milestone 3
@@ -141,6 +173,16 @@ export class Game {
     this.combatSystem = new CombatSystem({
       world: this.world,
       bus: this.bus
+    });
+
+    this.experienceSystem = new ExperienceSystem({
+      bus: this.bus,
+      reg: this.registry
+    });
+
+    this.cardDraftSystem = new CardDraftSystem({
+      bus: this.bus,
+      reg: this.registry
     });
   }
 
@@ -175,12 +217,19 @@ export class Game {
   };
 
   private update(deltaTime: number): void {
-    // Handle mouse clicks for DevOverlay
+    // Handle mouse clicks for overlays
     const mouseClick = this.input.getMouseClick();
     if (mouseClick.clicked) {
-      const handled = this.devOverlay.handleClick(mouseClick.x, mouseClick.y);
-      if (handled) {
-        // Click was handled by DevOverlay, don't process it further
+      // Check card overlay first (higher priority)
+      const cardClicked = this.cardOverlay.handleClick(mouseClick.x, mouseClick.y);
+      if (cardClicked && this.cardDraftSystem) {
+        this.cardDraftSystem.choose(cardClicked);
+      } else {
+        // Check dev overlay if no card was clicked
+        const handled = this.devOverlay.handleClick(mouseClick.x, mouseClick.y);
+        if (handled) {
+          // Click was handled by DevOverlay, don't process it further
+        }
       }
     }
 
@@ -261,7 +310,7 @@ export class Game {
         this.uiRenderer.drawTower(tower);
 
         // Render HUD
-        const hudModel = this.hud.snapshot(tower, this.clock);
+        const hudModel = this.hud.snapshot(tower, this.clock, this.experienceSystem || undefined);
         this.uiRenderer.drawHUD(hudModel);
       }
 
@@ -322,6 +371,9 @@ export class Game {
       this.devOverlay.renderEntityCounts(counts);
     }
 
+    // Render card overlay (on top of everything)
+    this.cardOverlay.render();
+
     // Render DevTools overlay last (on top)
     this.devOverlay.render();
 
@@ -352,6 +404,9 @@ export class Game {
     if (this.spawnSystem) {
       this.spawnSystem.reset();
     }
+    if (this.experienceSystem) {
+      this.experienceSystem.reset();
+    }
 
     this.inRun = true;
     this.clock.reset();
@@ -376,6 +431,13 @@ export class Game {
   spawnEnemyManually(enemyKey: string, count: number = 1): void {
     if (this.spawnSystem && this.inRun) {
       this.spawnSystem.requestSpawn(enemyKey, count);
+    }
+  }
+
+  /** Manually grant XP (for DevTools) */
+  grantXpManually(amount: number): void {
+    if (this.experienceSystem && this.inRun) {
+      this.experienceSystem.grant(amount);
     }
   }
 
@@ -404,5 +466,6 @@ export class Game {
     this.renderer.resize(width, height);
     this.uiRenderer.resize(width, height);
     this.devOverlay.resize(width, height);
+    this.cardOverlay.resize(width, height);
   }
 }

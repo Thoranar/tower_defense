@@ -9,7 +9,8 @@ export type ToggleKey =
   | 'behaviorTrails'
   | 'collisionMarkers'
   | 'hitLogs'
-  | 'invincibleTower';
+  | 'invincibleTower'
+  | 'draftPreview';
 
 export type SliderKey =
   | 'fireRateMult'
@@ -24,7 +25,8 @@ export type ActionKey =
   | 'grantXp'
   | 'equipWeapon'
   | 'forceEndRun'
-  | 'clearStorage';
+  | 'clearStorage'
+  | 'spawnBasicEnemy';
 
 export type ToggleMap = Partial<Record<ToggleKey, boolean>>;
 export type SliderMap = Partial<Record<SliderKey, number>>;

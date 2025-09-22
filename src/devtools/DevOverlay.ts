@@ -70,7 +70,8 @@ export class DevOverlay {
       { key: 'behaviorTrails', label: 'Behavior Trails', shortcut: '' },
       { key: 'collisionMarkers', label: 'Collision Markers', shortcut: '' },
       { key: 'hitLogs', label: 'Hit Logs', shortcut: '' },
-      { key: 'invincibleTower', label: 'Invincible Tower', shortcut: '' }
+      { key: 'invincibleTower', label: 'Invincible Tower', shortcut: '' },
+      { key: 'draftPreview', label: 'Draft Preview', shortcut: '' }
     ];
 
     for (const toggle of toggleEntries) {
@@ -106,6 +107,7 @@ export class DevOverlay {
     const actions = [
       { key: 'resetRun', label: '[R] Reset Run' },
       { key: 'spawnBasicEnemy', label: 'Spawn Basic Enemy' },
+      { key: 'grantXp', label: 'Grant +10 XP' },
       { key: 'clearStorage', label: '[C] Clear Storage' }
     ];
 
