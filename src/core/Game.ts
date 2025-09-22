@@ -85,7 +85,7 @@ export class Game {
     this.world = new World();
     this.hud = new Hud();
     this.bus = new EventBus();
-    this.cardOverlay = new CardOverlayView(this.uiRenderer, canvas.width, canvas.height);
+    this.cardOverlay = new CardOverlayView(this.uiRenderer, this.bus, canvas.width, canvas.height);
     this.prestigeSystem = new PrestigeSystem();
     this.gameOverScreen = new GameOverScreen(this.uiRenderer, canvas.width, canvas.height);
     this.mainMenuScreen = new MainMenuScreen(this.uiRenderer, canvas.width, canvas.height);
@@ -210,15 +210,16 @@ export class Game {
       reg: this.registry
     });
 
-    this.cardDraftSystem = new CardDraftSystem({
-      bus: this.bus,
-      reg: this.registry
-    });
-
     this.upgradeSystem = new UpgradeSystem({
       bus: this.bus,
       reg: this.registry!,
       creators: this.creators
+    });
+
+    this.cardDraftSystem = new CardDraftSystem({
+      bus: this.bus,
+      reg: this.registry,
+      upgradeSystem: this.upgradeSystem
     });
 
     this.towerSystem = new TowerSystem({

@@ -29,9 +29,6 @@ export class Projectile extends Entity {
   }
 
   update(dt: number): void {
-    this.pos.x += this.vel.x * dt;
-    this.pos.y += this.vel.y * dt;
-
     this.lifetime -= dt;
     if (this.lifetime <= 0) {
       this.alive = false;

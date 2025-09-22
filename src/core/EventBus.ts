@@ -8,6 +8,7 @@ export type EventKey =
   | "CardChosen"
   | "CardDraftActive"
   | "CardDraftClosed"
+  | "NoAvailableUpgrades"
   | "RunEnded"
   | "BossSpawned"
   | "BossDefeated"

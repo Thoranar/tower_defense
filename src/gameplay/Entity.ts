@@ -7,6 +7,7 @@ export type Vec2 = { x: number; y: number };
 export abstract class Entity {
   id: number = 0;                // unique id assigned by World
   pos: Vec2;                     // position in world space
+  prevPos: Vec2;                 // position in previous frame, for CCD
   vel: Vec2;                     // velocity per second
   radius: number;                // collision radius
   alive: boolean = true;         // false when scheduled for removal
@@ -14,6 +15,7 @@ export abstract class Entity {
 
   constructor(x: number = 0, y: number = 0, radius: number = 10) {
     this.pos = { x, y };
+    this.prevPos = { x, y };
     this.vel = { x: 0, y: 0 };
     this.radius = radius;
   }

@@ -8,7 +8,7 @@
     "description": "Standard projectile fired by cannon",
     "speed": 400,         // pixels per second
     "lifetime": 3.0,      // seconds before auto-despawn
-    "radius": 3,          // collision radius in pixels
+    "radius": 6,          // collision radius in pixels
     "visual": {
       "type": "circle",
       "color": "#ffff00", // yellow

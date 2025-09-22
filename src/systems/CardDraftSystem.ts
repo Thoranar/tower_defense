@@ -4,18 +4,21 @@
 
 import { EventBus } from '../core/EventBus.js';
 import { Registry, CardBlueprint } from '../data/registry.js';
+import { UpgradeSystem } from './UpgradeSystem.js';
 
 export class CardDraftSystem {
-  active: boolean = false;            // true when draft UI is visible
+  active: boolean = false;            // true when draft UI visible
   currentChoices: string[] = [];      // card keys currently presented
 
   private bus: EventBus;
   private registry: Registry;
   private rng: () => number;  // Simple RNG function
+  private upgradeSystem: UpgradeSystem; // For checking if an upgrade can be selected
 
-  constructor(args: { bus: EventBus; reg: Registry; rng?: () => number }) {
+  constructor(args: { bus: EventBus; reg: Registry; upgradeSystem: UpgradeSystem; rng?: () => number }) {
     this.bus = args.bus;
     this.registry = args.reg;
+    this.upgradeSystem = args.upgradeSystem;
     this.rng = args.rng || Math.random;
 
     // Listen for level up events to trigger card draft
@@ -27,10 +30,21 @@ export class CardDraftSystem {
   /** Create a new draft set of N cards from reg.cards (weighted). */
   offer(count: number): void {
     const cards = this.registry.cards;
-    const cardKeys = Object.keys(cards);
+    let cardKeys = Object.keys(cards);
+
+    // Filter for selectable cards
+    cardKeys = cardKeys.filter(key => {
+      const card = cards[key];
+      return card && this.upgradeSystem.canSelect(card.upgradeKey);
+    });
 
     if (cardKeys.length === 0) {
-      console.warn('No cards available for draft');
+      console.warn('No available upgrades to choose from.');
+      this.bus.emit('NoAvailableUpgrades', {});
+      // Even if no choices, we need to activate the draft so the UI can show the message
+      this.active = true;
+      this.currentChoices = [];
+      this.bus.emit('CardDraftActive', { choices: [] });
       return;
     }
 

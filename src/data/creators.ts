@@ -10,7 +10,7 @@ import { Vec2 } from '../gameplay/Entity.js';
 // Only way to create game objects; prevents hardcoded values
 export type Creators = {
   weapon(key: string, level?: number): Weapon;
-  projectile(key: string, x: number, y: number, vx: number, vy: number, damage: number, ownerId: number): Projectile;
+  projectile(key: string, x: number, y: number, vx: number, vy: number, damage: number, ownerId: number, piercing?: boolean, maxHits?: number, radius?: number): Projectile;
   enemy(key: string, pos: Vec2): Enemy;
   enemyFromBlueprint(key: string, blueprint: EnemyBlueprint, pos: Vec2): Enemy;
 };
@@ -31,7 +31,7 @@ export function makeCreators(registry: Registry): Creators {
       }
     },
 
-    projectile(key: string, x: number, y: number, vx: number, vy: number, damage: number, ownerId: number, piercing?: boolean, maxHits?: number): Projectile {
+    projectile(key: string, x: number, y: number, vx: number, vy: number, damage: number, ownerId: number, piercing?: boolean, maxHits?: number, radius?: number): Projectile {
       const blueprint = registry.projectiles[key];
       if (!blueprint) {
         throw new Error(`Unknown projectile key: ${key}`);
@@ -40,7 +40,7 @@ export function makeCreators(registry: Registry): Creators {
       return new Projectile(
         x, y, vx, vy, damage, ownerId,
         blueprint.lifetime,
-        blueprint.radius,
+        radius ?? blueprint.radius,
         piercing ?? blueprint.physics?.piercing ?? false,
         maxHits ?? 1
       );

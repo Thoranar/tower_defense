@@ -11,18 +11,23 @@
     },
     "1": {
       "name": "Twin Shot",
-      "description": "Two projectiles at 25° spread",
-      "angles": [-25, 25]
+      "description": "Two projectiles at 15° spread",
+      "angles": [-15, 15]
     },
     "2": {
       "name": "Triple Shot",
-      "description": "Three projectiles: center + 25° spread",
-      "angles": [-25, 0, 25]
+      "description": "Three projectiles: center + 15° spread",
+      "angles": [-15, 0, 15]
     },
     "3": {
       "name": "Quad Shot",
       "description": "Four projectiles: 25° and 45° spread",
-      "angles": [-45, -25, 25, 45]
+      "angles": [-25, -15, 15, 25]
+    },
+    "4": {
+      "name": "5 Shot",
+      "description": "Four projectiles: 25° and 45° spread",
+      "angles": [-25, -15, 0, 15, 25]
     }
   }
 }

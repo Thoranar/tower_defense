@@ -4,6 +4,7 @@
 
 import { UIRenderer } from './UIRenderer.js';
 import { CardBlueprint } from '../data/registry.js';
+import { EventBus } from '../core/EventBus.js';
 
 type CardChoice = {
   key: string;
@@ -20,14 +21,17 @@ type ClickableCard = {
 
 export class CardOverlayView {
   private uiRenderer: UIRenderer;
+  private bus: EventBus;
   private width: number;
   private height: number;
   private isVisible: boolean = false;
   private choices: CardChoice[] = [];
   private clickableCards: ClickableCard[] = [];
+  private noAvailableUpgrades: boolean = false;
 
-  constructor(uiRenderer: UIRenderer, width: number, height: number) {
+  constructor(uiRenderer: UIRenderer, bus: EventBus, width: number, height: number) {
     this.uiRenderer = uiRenderer;
+    this.bus = bus;
     this.width = width;
     this.height = height;
   }
@@ -36,6 +40,7 @@ export class CardOverlayView {
   show(choices: CardChoice[]): void {
     this.choices = choices;
     this.isVisible = true;
+    this.noAvailableUpgrades = choices.length === 0;
     this.updateClickableAreas();
   }
 
@@ -44,6 +49,7 @@ export class CardOverlayView {
     this.isVisible = false;
     this.choices = [];
     this.clickableCards = [];
+    this.noAvailableUpgrades = false;
   }
 
   /** Check if overlay is currently visible */
@@ -54,6 +60,11 @@ export class CardOverlayView {
   /** Handle click on overlay, returns selected card key or null */
   handleClick(x: number, y: number): string | null {
     if (!this.isVisible) return null;
+
+    if (this.noAvailableUpgrades) {
+      this.bus.emit('CardDraftClosed', {});
+      return null;
+    }
 
     for (const clickable of this.clickableCards) {
       if (x >= clickable.x && x <= clickable.x + clickable.width &&
@@ -67,10 +78,15 @@ export class CardOverlayView {
 
   /** Render the card overlay */
   render(): void {
-    if (!this.isVisible || this.choices.length === 0) return;
+    if (!this.isVisible) return;
 
     // Draw overlay background
     this.uiRenderer.drawRect(0, 0, this.width, this.height, 'rgba(0, 0, 0, 0.8)');
+
+    if (this.noAvailableUpgrades) {
+      this.renderNoUpgradesMessage();
+      return;
+    }
 
     // Title
     const titleY = 100;
@@ -102,6 +118,16 @@ export class CardOverlayView {
     // Pause indicator
     const pauseY = instructY + 30;
     this.uiRenderer.drawText('GAME PAUSED', this.width / 2 - 50, pauseY, '#ffa500', 'bold 14px monospace');
+  }
+
+  private renderNoUpgradesMessage(): void {
+    const text = 'No available upgrades';
+    const subtext = 'Click to continue';
+    const textY = this.height / 2 - 20;
+    const subtextY = this.height / 2 + 20;
+
+    this.uiRenderer.drawText(text, this.width / 2 - (text.length * 14) / 2, textY, '#fff', 'bold 24px monospace');
+    this.uiRenderer.drawText(subtext, this.width / 2 - (subtext.length * 8) / 2, subtextY, '#ccc', '16px monospace');
   }
 
   private drawCard(x: number, y: number, width: number, height: number, card: CardBlueprint): void {

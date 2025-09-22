@@ -22,6 +22,10 @@ export class MovementSystem {
   /** Integrate positions by velocity; apply behavior updates */
   update(dt: number): void {
     for (const entity of this.world.all()) {
+      // Store current position as previous position for CCD
+      entity.prevPos.x = entity.pos.x;
+      entity.prevPos.y = entity.pos.y;
+
       // Apply behaviors for enemies
       if (entity instanceof Enemy) {
         this.applyEnemyBehaviors(entity, dt);
