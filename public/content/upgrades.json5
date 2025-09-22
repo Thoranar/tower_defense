@@ -4,41 +4,29 @@
   // Operations: statAdd, statMult, statSet
 
   "damage_boost": {
-    "name": "Damage Boost",
-    "description": "Increases tower damage output",
     "maxLevel": 5,
-    "icon": "⚔️",
-    "color": "#ff6b6b",
     "effects": {
-      "1": [{ "op": "statAdd", "target": "tower.damageMult", "value": 0.25 }],
-      "2": [{ "op": "statAdd", "target": "tower.damageMult", "value": 0.35 }],
-      "3": [{ "op": "statAdd", "target": "tower.damageMult", "value": 0.50 }],
-      "4": [{ "op": "statAdd", "target": "tower.damageMult", "value": 0.75 }],
-      "5": [{ "op": "statAdd", "target": "tower.damageMult", "value": 1.00 }]
+      "1": [{ "op": "statMult", "target": "tower.damage", "value": 1.25 }],
+      "2": [{ "op": "statMult", "target": "tower.damage", "value": 1.35 }],
+      "3": [{ "op": "statMult", "target": "tower.damage", "value": 1.50 }],
+      "4": [{ "op": "statMult", "target": "tower.damage", "value": 1.75 }],
+      "5": [{ "op": "statMult", "target": "tower.damage", "value": 2.00 }]
     }
   },
 
   "fire_rate": {
-    "name": "Rapid Fire",
-    "description": "Increases weapon firing speed",
     "maxLevel": 5,
-    "icon": "🔥",
-    "color": "#ffa500",
     "effects": {
-      "1": [{ "op": "statAdd", "target": "tower.fireRateMult", "value": 0.20 }],
-      "2": [{ "op": "statAdd", "target": "tower.fireRateMult", "value": 0.30 }],
-      "3": [{ "op": "statAdd", "target": "tower.fireRateMult", "value": 0.45 }],
-      "4": [{ "op": "statAdd", "target": "tower.fireRateMult", "value": 0.65 }],
-      "5": [{ "op": "statAdd", "target": "tower.fireRateMult", "value": 1.00 }]
+      "1": [{ "op": "statMult", "target": "tower.fireRate", "value": 1.20 }],
+      "2": [{ "op": "statMult", "target": "tower.fireRate", "value": 1.30 }],
+      "3": [{ "op": "statMult", "target": "tower.fireRate", "value": 1.45 }],
+      "4": [{ "op": "statMult", "target": "tower.fireRate", "value": 1.65 }],
+      "5": [{ "op": "statMult", "target": "tower.fireRate", "value": 2.00 }]
     }
   },
 
   "tower_health": {
-    "name": "Reinforced Armor",
-    "description": "Increases tower maximum health",
     "maxLevel": 5,
-    "icon": "🛡️",
-    "color": "#4ecdc4",
     "effects": {
       "1": [{ "op": "statAdd", "target": "tower.maxHp", "value": 50 }],
       "2": [{ "op": "statAdd", "target": "tower.maxHp", "value": 75 }],
@@ -49,39 +37,39 @@
   },
 
   "projectile_speed": {
-    "name": "Velocity Boost",
-    "description": "Increases projectile speed",
     "maxLevel": 5,
-    "icon": "⚡",
-    "color": "#45b7d1",
     "effects": {
-      "1": [{ "op": "statAdd", "target": "projectile.speedMult", "value": 0.30 }],
-      "2": [{ "op": "statAdd", "target": "projectile.speedMult", "value": 0.50 }],
-      "3": [{ "op": "statAdd", "target": "projectile.speedMult", "value": 0.75 }],
-      "4": [{ "op": "statAdd", "target": "projectile.speedMult", "value": 1.00 }],
-      "5": [{ "op": "statAdd", "target": "projectile.speedMult", "value": 1.50 }]
+      "1": [{ "op": "statMult", "target": "projectile.speed", "value": 1.30 }],
+      "2": [{ "op": "statMult", "target": "projectile.speed", "value": 1.50 }],
+      "3": [{ "op": "statMult", "target": "projectile.speed", "value": 1.75 }],
+      "4": [{ "op": "statMult", "target": "projectile.speed", "value": 2.00 }],
+      "5": [{ "op": "statMult", "target": "projectile.speed", "value": 2.50 }]
+    }
+  },
+
+    "projectile_size": {
+    "maxLevel": 5,
+    "effects": {
+      "1": [{ "op": "statMult", "target": "projectile.radius", "value": 1.25 }],
+      "2": [{ "op": "statMult", "target": "projectile.radius", "value": 1.50 }],
+      "3": [{ "op": "statMult", "target": "projectile.radius", "value": 1.75 }],
+      "4": [{ "op": "statMult", "target": "projectile.radius", "value": 2.00 }],
+      "5": [{ "op": "statMult", "target": "projectile.radius", "value": 2.25 }]
     }
   },
 
   "scatter_shot": {
-    "name": "Scatter Shot",
-    "description": "Fires projectiles in a spread pattern",
-    "maxLevel": 3,
-    "icon": "📡",
-    "color": "#9b59b6",
+    "maxLevel": 4,
     "effects": {
       "1": [{ "op": "statAdd", "target": "weapon.scatterLevel", "value": 1 }],
       "2": [{ "op": "statAdd", "target": "weapon.scatterLevel", "value": 1 }],
-      "3": [{ "op": "statAdd", "target": "weapon.scatterLevel", "value": 1 }]
+      "3": [{ "op": "statAdd", "target": "weapon.scatterLevel", "value": 1 }],
+      "4": [{ "op": "statAdd", "target": "weapon.scatterLevel", "value": 1 }]
     }
   },
 
   "piercing_shot": {
-    "name": "Piercing Rounds",
-    "description": "Projectiles pierce through enemies",
     "maxLevel": 3,
-    "icon": "🎯",
-    "color": "#e74c3c",
     "effects": {
       "1": [{ "op": "statSet", "target": "projectile.piercing", "value": true }, { "op": "statAdd", "target": "projectile.maxHits", "value": 2 }],
       "2": [{ "op": "statAdd", "target": "projectile.maxHits", "value": 1 }],

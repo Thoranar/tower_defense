@@ -7,8 +7,8 @@ import { EventBus } from '../core/EventBus.js';
 export type TowerStats = {
   hp: number;
   maxHp: number;
-  damageMult: number;
-  fireRateMult: number;
+  damage: number;
+  fireRate: number;
   regen: number;
 };
 
@@ -18,7 +18,8 @@ export type WeaponStats = {
 };
 
 export type ProjectileStats = {
-  speedMult: number;
+  speed: number;
+  radius: number;
   piercing: boolean;
   maxHits: number;
 };
@@ -38,7 +39,7 @@ export type EquipWeaponEvent = {
 // Main player-controlled entity at bottom center of screen
 // Manages weapon systems, health, and turret rotation
 export class Tower extends Entity {
-  stats: TowerStats;             // hp, maxHp, damageMult, fireRateMult, regen
+  stats: TowerStats;             // hp, maxHp, damage, fireRate, regen
   baseStats: TowerStats;         // Original stats before upgrades
   weaponStats: WeaponStats;      // weapon-related upgrades
   baseWeaponStats: WeaponStats;  // Original weapon stats
@@ -55,8 +56,8 @@ export class Tower extends Entity {
     this.baseStats = {
       hp: 100,
       maxHp: 100,
-      damageMult: 1.0,
-      fireRateMult: 1.0,
+      damage: 10,
+      fireRate: 1.0,
       regen: 0
     };
 
@@ -67,7 +68,8 @@ export class Tower extends Entity {
 
     // Initialize base projectile stats
     this.baseProjectileStats = {
-      speedMult: 1.0,
+      speed: 400,
+      radius: 3,
       piercing: false,
       maxHits: 1
     };
@@ -181,7 +183,7 @@ export class Tower extends Entity {
           creators: creators,
           // Pass tower stats to weapons for upgrades
           towerStats: {
-            damageMult: this.stats.damageMult,
+            damage: this.stats.damage,
             weaponStats: this.weaponStats,
             projectileStats: this.projectileStats
           }
@@ -204,7 +206,7 @@ export class Tower extends Entity {
   private applyStatModification(data: StatModificationEvent): void {
     const { op, target, value } = data;
 
-    // Parse target (e.g., "tower.damageMult", "weapon.projectileCount", "projectile.speedMult")
+    // Parse target (e.g., "tower.damage", "weapon.scatterLevel", "projectile.speed")
     const targetParts = target.split('.');
     if (targetParts.length !== 2) {
       console.warn(`Invalid stat target format: ${target}`);
@@ -344,14 +346,14 @@ export class Tower extends Entity {
 
   /** Get derived stats for display (shows the effects of all upgrades). */
   getDerivedStats(): TowerStats & {
-    damageMultDisplay: string;
-    fireRateMultDisplay: string;
+    damageDisplay: string;
+    fireRateDisplay: string;
     regenDisplay: string;
   } {
     return {
       ...this.stats,
-      damageMultDisplay: `${(this.stats.damageMult * 100).toFixed(0)}%`,
-      fireRateMultDisplay: `${(this.stats.fireRateMult * 100).toFixed(0)}%`,
+      damageDisplay: `${this.stats.damage.toFixed(1)}`,
+      fireRateDisplay: `${this.stats.fireRate.toFixed(2)}x`,
       regenDisplay: this.stats.regen > 0 ? `+${this.stats.regen.toFixed(1)}/s` : 'None'
     };
   }

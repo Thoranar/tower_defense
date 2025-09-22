@@ -482,11 +482,11 @@ export class DevOverlay {
     overlayY += lineHeight;
 
     // Damage multiplier
-    this.uiRenderer.drawText(`Damage: ${stats.damageMultDisplay}`, overlayX, overlayY, '#f66', '12px monospace');
+    this.uiRenderer.drawText(`Damage: ${stats.damageDisplay}`, overlayX, overlayY, '#f66', '12px monospace');
     overlayY += lineHeight;
 
     // Fire rate multiplier
-    this.uiRenderer.drawText(`Fire Rate: ${stats.fireRateMultDisplay}`, overlayX, overlayY, '#ff6', '12px monospace');
+    this.uiRenderer.drawText(`Fire Rate: ${stats.fireRateDisplay}`, overlayX, overlayY, '#ff6', '12px monospace');
     overlayY += lineHeight;
 
     // Regeneration

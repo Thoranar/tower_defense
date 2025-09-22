@@ -23,21 +23,18 @@ export class Cannon extends Weapon {
     const muzzleX = ctx.origin.x + ctx.direction.x * this.barrelLength;
     const muzzleY = ctx.origin.y + ctx.direction.y * this.barrelLength;
 
-    // Get projectile speed from registry and apply tower speed multiplier
-    const projectileBlueprint = ctx.creators.registry?.projectiles[this.projectileKey];
-    const baseSpeed = projectileBlueprint?.speed ?? 400;
-    const speedMultiplier = ctx.towerStats?.projectileStats?.speedMult ?? 1.0;
-    const speed = baseSpeed * speedMultiplier;
+    // Get projectile speed and radius from tower stats (already upgraded values)
+    const speed = ctx.towerStats?.projectileStats?.speed ?? 400;
+    const radius = ctx.towerStats?.projectileStats?.radius ?? 3;
 
 
     // Calculate velocity based on direction and speed
     const vx = ctx.direction.x * speed;
     const vy = ctx.direction.y * speed;
 
-    // Get damage from weapon blueprint and apply tower damage multiplier
+    // Get damage from tower stats (already upgraded value)
     const baseDamage = this.blueprint.baseUpgradeStats.damage;
-    const damageMultiplier = ctx.towerStats?.damageMult ?? 1.0;
-    const damage = baseDamage * damageMultiplier;
+    const damage = ctx.towerStats?.damage ?? baseDamage;
 
     // Get piercing stats from tower
     const piercing = ctx.towerStats?.projectileStats?.piercing ?? false;
@@ -53,7 +50,8 @@ export class Cannon extends Weapon {
       damage,
       ctx.ownerId,
       piercing,
-      maxHits
+      maxHits,
+      radius
     );
 
     // Reset cooldown with fire rate multiplier applied

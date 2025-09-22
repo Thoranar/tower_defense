@@ -116,11 +116,11 @@ export const FALLBACK_REGISTRY: Registry = {
       icon: "⚔️",
       color: "#ff6b6b",
       effects: {
-        "1": [{ "op": "statAdd", "target": "tower.damageMult", "value": 0.25 }],
-        "2": [{ "op": "statAdd", "target": "tower.damageMult", "value": 0.35 }],
-        "3": [{ "op": "statAdd", "target": "tower.damageMult", "value": 0.50 }],
-        "4": [{ "op": "statAdd", "target": "tower.damageMult", "value": 0.75 }],
-        "5": [{ "op": "statAdd", "target": "tower.damageMult", "value": 1.00 }]
+        "1": [{ "op": "statMult", "target": "tower.damage", "value": 1.25 }],
+        "2": [{ "op": "statMult", "target": "tower.damage", "value": 1.35 }],
+        "3": [{ "op": "statMult", "target": "tower.damage", "value": 1.50 }],
+        "4": [{ "op": "statMult", "target": "tower.damage", "value": 1.75 }],
+        "5": [{ "op": "statMult", "target": "tower.damage", "value": 2.00 }]
       }
     },
     fire_rate: {
@@ -130,11 +130,11 @@ export const FALLBACK_REGISTRY: Registry = {
       icon: "🔥",
       color: "#ffa500",
       effects: {
-        "1": [{ "op": "statAdd", "target": "tower.fireRateMult", "value": 0.20 }],
-        "2": [{ "op": "statAdd", "target": "tower.fireRateMult", "value": 0.30 }],
-        "3": [{ "op": "statAdd", "target": "tower.fireRateMult", "value": 0.45 }],
-        "4": [{ "op": "statAdd", "target": "tower.fireRateMult", "value": 0.65 }],
-        "5": [{ "op": "statAdd", "target": "tower.fireRateMult", "value": 1.00 }]
+        "1": [{ "op": "statMult", "target": "tower.fireRate", "value": 1.20 }],
+        "2": [{ "op": "statMult", "target": "tower.fireRate", "value": 1.30 }],
+        "3": [{ "op": "statMult", "target": "tower.fireRate", "value": 1.45 }],
+        "4": [{ "op": "statMult", "target": "tower.fireRate", "value": 1.65 }],
+        "5": [{ "op": "statMult", "target": "tower.fireRate", "value": 2.00 }]
       }
     },
     tower_health: {

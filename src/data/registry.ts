@@ -382,7 +382,7 @@ export async function loadRegistry(): Promise<Registry> {
           icon: "⚔️",
           color: "#ff6b6b",
           effects: {
-            "1": [{ "op": "statAdd", "target": "tower.damageMult", "value": 0.25 }]
+            "1": [{ "op": "statMult", "target": "tower.damage", "value": 1.25 }]
           }
         }
       },

@@ -46,15 +46,26 @@
       "color": "#45b7d1"
     }
   },
-  "multi_shot": {
-    "name": "Multi-Shot",
+  "scatter_shot": {
+    "name": "Scatter-Shot",
     "description": "Fire 2 additional projectiles",
     "rarity": "rare",
     "weight": 30,
-    "upgradeKey": "multi_shot",
+    "upgradeKey": "scatter_shot",
     "visual": {
       "icon": "📡",
       "color": "#9b59b6"
+    }
+  },
+  "projectile_size": {
+    "name": "Projectile Size",
+    "description": "Increases projectile size",
+    "rarity": "uncommon",
+    "weight": 60,
+    "upgradeKey": "projectile_size",
+    "visual": {
+      "icon": "⚡",
+      "color": "#1be7c8ff"
     }
   },
   "piercing_shot": {

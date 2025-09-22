@@ -69,7 +69,7 @@ export class TowerSystem {
    */
   private handleWeaponFiring(tower: Tower, devToolsFireRateMultiplier: number): void {
     // Combine tower's fire rate stat with dev tools multiplier
-    const totalFireRateMultiplier = tower.stats.fireRateMult * devToolsFireRateMultiplier;
+    const totalFireRateMultiplier = tower.stats.fireRate * devToolsFireRateMultiplier;
     const projectiles = tower.fireWeapons(totalFireRateMultiplier, this.creators);
 
 
