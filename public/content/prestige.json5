@@ -1,0 +1,264 @@
+{
+  // Prestige Store Items - Permanent upgrades purchasable with prestige currency
+  // Categories: tower, building, weapon
+  // Each item has cost, maxLevel, and effects that persist across runs
+
+  // ===== TOWER UPGRADES TAB =====
+  "prestige_tower_damage": {
+    "category": "tower",
+    "name": "Tower Damage Boost",
+    "description": "Permanently increases tower base damage",
+    "icon": "tower_damage",
+    "maxLevel": 10,
+    "basePrice": 5,
+    "priceScaling": 1.5,
+    "effects": {
+      "1": [{ "op": "statMult", "target": "tower.baseDamage", "value": 1.1 }],
+      "2": [{ "op": "statMult", "target": "tower.baseDamage", "value": 1.15 }],
+      "3": [{ "op": "statMult", "target": "tower.baseDamage", "value": 1.2 }],
+      "4": [{ "op": "statMult", "target": "tower.baseDamage", "value": 1.25 }],
+      "5": [{ "op": "statMult", "target": "tower.baseDamage", "value": 1.3 }],
+      "6": [{ "op": "statMult", "target": "tower.baseDamage", "value": 1.35 }],
+      "7": [{ "op": "statMult", "target": "tower.baseDamage", "value": 1.4 }],
+      "8": [{ "op": "statMult", "target": "tower.baseDamage", "value": 1.45 }],
+      "9": [{ "op": "statMult", "target": "tower.baseDamage", "value": 1.5 }],
+      "10": [{ "op": "statMult", "target": "tower.baseDamage", "value": 1.6 }]
+    }
+  },
+
+  "prestige_tower_health": {
+    "category": "tower",
+    "name": "Tower Fortification",
+    "description": "Permanently increases tower maximum health",
+    "icon": "tower_health",
+    "maxLevel": 10,
+    "basePrice": 8,
+    "priceScaling": 1.4,
+    "effects": {
+      "1": [{ "op": "statAdd", "target": "tower.maxHp", "value": 25 }],
+      "2": [{ "op": "statAdd", "target": "tower.maxHp", "value": 40 }],
+      "3": [{ "op": "statAdd", "target": "tower.maxHp", "value": 60 }],
+      "4": [{ "op": "statAdd", "target": "tower.maxHp", "value": 80 }],
+      "5": [{ "op": "statAdd", "target": "tower.maxHp", "value": 100 }],
+      "6": [{ "op": "statAdd", "target": "tower.maxHp", "value": 125 }],
+      "7": [{ "op": "statAdd", "target": "tower.maxHp", "value": 150 }],
+      "8": [{ "op": "statAdd", "target": "tower.maxHp", "value": 180 }],
+      "9": [{ "op": "statAdd", "target": "tower.maxHp", "value": 220 }],
+      "10": [{ "op": "statAdd", "target": "tower.maxHp", "value": 300 }]
+    }
+  },
+
+  "prestige_tower_fire_rate": {
+    "category": "tower",
+    "name": "Enhanced Firing Systems",
+    "description": "Permanently increases tower fire rate",
+    "icon": "tower_fire_rate",
+    "maxLevel": 8,
+    "basePrice": 10,
+    "priceScaling": 1.6,
+    "effects": {
+      "1": [{ "op": "statMult", "target": "tower.baseFireRate", "value": 1.1 }],
+      "2": [{ "op": "statMult", "target": "tower.baseFireRate", "value": 1.15 }],
+      "3": [{ "op": "statMult", "target": "tower.baseFireRate", "value": 1.2 }],
+      "4": [{ "op": "statMult", "target": "tower.baseFireRate", "value": 1.25 }],
+      "5": [{ "op": "statMult", "target": "tower.baseFireRate", "value": 1.3 }],
+      "6": [{ "op": "statMult", "target": "tower.baseFireRate", "value": 1.35 }],
+      "7": [{ "op": "statMult", "target": "tower.baseFireRate", "value": 1.4 }],
+      "8": [{ "op": "statMult", "target": "tower.baseFireRate", "value": 1.5 }]
+    }
+  },
+
+  "prestige_xp_boost": {
+    "category": "tower",
+    "name": "Experience Amplifier",
+    "description": "Permanently increases XP gain from enemies",
+    "icon": "xp_boost",
+    "maxLevel": 5,
+    "basePrice": 12,
+    "priceScaling": 1.8,
+    "effects": {
+      "1": [{ "op": "statMult", "target": "player.xpGain", "value": 1.15 }],
+      "2": [{ "op": "statMult", "target": "player.xpGain", "value": 1.25 }],
+      "3": [{ "op": "statMult", "target": "player.xpGain", "value": 1.35 }],
+      "4": [{ "op": "statMult", "target": "player.xpGain", "value": 1.5 }],
+      "5": [{ "op": "statMult", "target": "player.xpGain", "value": 1.75 }]
+    }
+  },
+
+  // ===== BUILDING UNLOCKS & UPGRADES TAB =====
+  "unlock_auto_turret": {
+    "category": "building",
+    "name": "Auto Turret",
+    "description": "Unlocks automatic defense turret support building",
+    "icon": "auto_turret",
+    "maxLevel": 1,
+    "basePrice": 25,
+    "priceScaling": 1.0,
+    "effects": {
+      "1": [{ "op": "unlockBuilding", "buildingKey": "autoTurret" }]
+    }
+  },
+
+  "unlock_buff_beacon": {
+    "category": "building",
+    "name": "Damage Beacon",
+    "description": "Unlocks damage amplification beacon support building",
+    "icon": "buff_beacon",
+    "maxLevel": 1,
+    "basePrice": 30,
+    "priceScaling": 1.0,
+    "effects": {
+      "1": [{ "op": "unlockBuilding", "buildingKey": "damageBeacon" }]
+    }
+  },
+
+  "unlock_repair_station": {
+    "category": "building",
+    "name": "Repair Station",
+    "description": "Unlocks automated repair station support building",
+    "icon": "repair_station",
+    "maxLevel": 1,
+    "basePrice": 35,
+    "priceScaling": 1.0,
+    "effects": {
+      "1": [{ "op": "unlockBuilding", "buildingKey": "repairStation" }]
+    }
+  },
+
+  "upgrade_auto_turret_damage": {
+    "category": "building",
+    "name": "Turret Damage Boost",
+    "description": "Increases auto turret base damage",
+    "icon": "turret_damage",
+    "maxLevel": 5,
+    "basePrice": 15,
+    "priceScaling": 1.4,
+    "requiresUnlock": "unlock_auto_turret",
+    "effects": {
+      "1": [{ "op": "statMult", "target": "autoTurret.damage", "value": 1.2 }],
+      "2": [{ "op": "statMult", "target": "autoTurret.damage", "value": 1.35 }],
+      "3": [{ "op": "statMult", "target": "autoTurret.damage", "value": 1.5 }],
+      "4": [{ "op": "statMult", "target": "autoTurret.damage", "value": 1.7 }],
+      "5": [{ "op": "statMult", "target": "autoTurret.damage", "value": 2.0 }]
+    }
+  },
+
+  "upgrade_beacon_range": {
+    "category": "building",
+    "name": "Beacon Range Extension",
+    "description": "Increases damage beacon effective range",
+    "icon": "beacon_range",
+    "maxLevel": 3,
+    "basePrice": 20,
+    "priceScaling": 1.5,
+    "requiresUnlock": "unlock_buff_beacon",
+    "effects": {
+      "1": [{ "op": "statMult", "target": "damageBeacon.range", "value": 1.25 }],
+      "2": [{ "op": "statMult", "target": "damageBeacon.range", "value": 1.5 }],
+      "3": [{ "op": "statMult", "target": "damageBeacon.range", "value": 1.8 }]
+    }
+  },
+
+  // ===== WEAPONS & PROJECTILES TAB =====
+  "unlock_rapid_cannon": {
+    "category": "weapon",
+    "name": "Rapid Cannon Access",
+    "description": "Unlocks rapid cannon weapon for upgrade selection",
+    "icon": "rapid_cannon",
+    "maxLevel": 1,
+    "basePrice": 20,
+    "priceScaling": 1.0,
+    "effects": {
+      "1": [{ "op": "unlockWeapon", "weaponKey": "rapidCannon" }]
+    }
+  },
+
+  "unlock_scatter_cannon": {
+    "category": "weapon",
+    "name": "Scatter Cannon Access",
+    "description": "Unlocks scatter cannon weapon for upgrade selection",
+    "icon": "scatter_cannon",
+    "maxLevel": 1,
+    "basePrice": 35,
+    "priceScaling": 1.0,
+    "effects": {
+      "1": [{ "op": "unlockWeapon", "weaponKey": "scatterCannon" }]
+    }
+  },
+
+  "unlock_heavy_cannon": {
+    "category": "weapon",
+    "name": "Heavy Cannon Access",
+    "description": "Unlocks heavy cannon weapon for upgrade selection",
+    "icon": "heavy_cannon",
+    "maxLevel": 1,
+    "basePrice": 50,
+    "priceScaling": 1.0,
+    "effects": {
+      "1": [{ "op": "unlockWeapon", "weaponKey": "heavyCannon" }]
+    }
+  },
+
+  "unlock_piercing_rounds": {
+    "category": "weapon",
+    "name": "Piercing Ammunition",
+    "description": "Unlocks piercing bullet projectile type",
+    "icon": "piercing_rounds",
+    "maxLevel": 1,
+    "basePrice": 25,
+    "priceScaling": 1.0,
+    "effects": {
+      "1": [{ "op": "unlockProjectile", "projectileKey": "piercingBullet" }]
+    }
+  },
+
+  "unlock_explosive_shells": {
+    "category": "weapon",
+    "name": "Explosive Ammunition",
+    "description": "Unlocks explosive shell projectile type",
+    "icon": "explosive_shells",
+    "maxLevel": 1,
+    "basePrice": 40,
+    "priceScaling": 1.0,
+    "effects": {
+      "1": [{ "op": "unlockProjectile", "projectileKey": "explosiveShell" }]
+    }
+  },
+
+  "upgrade_weapon_damage": {
+    "category": "weapon",
+    "name": "Weapon Enhancement",
+    "description": "Permanently boosts all weapon damage multipliers",
+    "icon": "weapon_damage",
+    "maxLevel": 8,
+    "basePrice": 18,
+    "priceScaling": 1.5,
+    "effects": {
+      "1": [{ "op": "statMult", "target": "weapons.damageMultiplier", "value": 1.1 }],
+      "2": [{ "op": "statMult", "target": "weapons.damageMultiplier", "value": 1.15 }],
+      "3": [{ "op": "statMult", "target": "weapons.damageMultiplier", "value": 1.2 }],
+      "4": [{ "op": "statMult", "target": "weapons.damageMultiplier", "value": 1.25 }],
+      "5": [{ "op": "statMult", "target": "weapons.damageMultiplier", "value": 1.3 }],
+      "6": [{ "op": "statMult", "target": "weapons.damageMultiplier", "value": 1.35 }],
+      "7": [{ "op": "statMult", "target": "weapons.damageMultiplier", "value": 1.4 }],
+      "8": [{ "op": "statMult", "target": "weapons.damageMultiplier", "value": 1.5 }]
+    }
+  },
+
+  "upgrade_projectile_speed": {
+    "category": "weapon",
+    "name": "Projectile Acceleration",
+    "description": "Permanently increases projectile movement speed",
+    "icon": "projectile_speed",
+    "maxLevel": 5,
+    "basePrice": 12,
+    "priceScaling": 1.3,
+    "effects": {
+      "1": [{ "op": "statMult", "target": "projectiles.speed", "value": 1.15 }],
+      "2": [{ "op": "statMult", "target": "projectiles.speed", "value": 1.25 }],
+      "3": [{ "op": "statMult", "target": "projectiles.speed", "value": 1.35 }],
+      "4": [{ "op": "statMult", "target": "projectiles.speed", "value": 1.5 }],
+      "5": [{ "op": "statMult", "target": "projectiles.speed", "value": 1.7 }]
+    }
+  }
+}

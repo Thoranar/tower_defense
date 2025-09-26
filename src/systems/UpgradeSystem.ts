@@ -6,6 +6,7 @@ import { EventBus } from '../core/EventBus.js';
 import { Registry, UpgradeBlueprint, UpgradeEffect } from '../data/registry.js';
 import { Creators } from '../data/creators.js';
 import { Tower } from '../gameplay/Tower.js';
+import { PrestigeSystem } from './PrestigeSystem.js';
 
 export class UpgradeSystem {
   private levels: Map<string, number> = new Map();  // upgradeKey -> level
@@ -15,11 +16,13 @@ export class UpgradeSystem {
   private bus: EventBus;
   private registry: Registry;
   private creators: Creators;
+  private prestigeSystem?: PrestigeSystem;
 
-  constructor(args: { bus: EventBus; reg: Registry; creators: Creators }) {
+  constructor(args: { bus: EventBus; reg: Registry; creators: Creators; prestigeSystem?: PrestigeSystem }) {
     this.bus = args.bus;
     this.registry = args.reg;
     this.creators = args.creators;
+    this.prestigeSystem = args.prestigeSystem;
 
     // Get limits from config
     this.slotsMax = this.registry.config.upgrades.maxSlots;
@@ -44,6 +47,13 @@ export class UpgradeSystem {
     // Check if we can level this upgrade further
     if (currentLevel >= upgrade.maxLevel || currentLevel >= this.maxLevelPerUpgrade) {
       return false;
+    }
+
+    // Check prestige unlock requirements for weapon and projectile upgrades
+    if (this.prestigeSystem && currentLevel === 0) {
+      if (!this.isUpgradeUnlocked(upgKey, upgrade)) {
+        return false;
+      }
     }
 
     // If it's a new upgrade, check if we have slots available
@@ -231,6 +241,36 @@ export class UpgradeSystem {
       max: this.slotsMax,
       available: this.slotsMax - used
     };
+  }
+
+  /** Check if an upgrade is unlocked via prestige system */
+  private isUpgradeUnlocked(upgKey: string, upgrade: UpgradeBlueprint): boolean {
+    if (!this.prestigeSystem) {
+      return true; // If no prestige system, all upgrades are available
+    }
+
+    const metaData = this.prestigeSystem.getMetaData();
+
+    // Check each effect in the upgrade to see if it requires unlocks
+    for (const levelEffects of Object.values(upgrade.effects)) {
+      for (const effect of levelEffects) {
+        // Check weapon equipment upgrades
+        if (effect.op === 'equipWeapon' && effect.weaponKey) {
+          if (!metaData.unlockedWeapons.includes(effect.weaponKey)) {
+            return false;
+          }
+        }
+
+        // Check projectile switching upgrades
+        if (effect.op === 'switchProjectile' && effect.projectileKey) {
+          if (!metaData.unlockedProjectiles.includes(effect.projectileKey)) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true; // No prestige requirements or all requirements met
   }
 
   /** Reset selection map at run start. */

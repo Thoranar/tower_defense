@@ -4,6 +4,7 @@
 
 import { EventBus } from '../core/EventBus.js';
 import { Registry } from '../data/registry.js';
+import { PrestigeSystem } from './PrestigeSystem.js';
 
 export class ExperienceSystem {
   level: number = 1;              // current run level
@@ -12,10 +13,12 @@ export class ExperienceSystem {
 
   private bus: EventBus;
   private registry: Registry;
+  private prestigeSystem?: PrestigeSystem | undefined;
 
-  constructor(args: { bus: EventBus; reg: Registry }) {
+  constructor(args: { bus: EventBus; reg: Registry; prestigeSystem?: PrestigeSystem }) {
     this.bus = args.bus;
     this.registry = args.reg;
+    this.prestigeSystem = args.prestigeSystem;
 
     // Initialize XP curve from config
     this.xpToNext = this.registry.config.xp.curve[0] || this.registry.config.xp.basePerLevel;
@@ -28,7 +31,15 @@ export class ExperienceSystem {
 
   /** Grant XP (e.g., on EnemyKilled); may trigger LevelUp event. */
   grant(xpAmount: number): void {
-    this.xp += xpAmount;
+    // Apply prestige XP multipliers
+    let finalXpAmount = xpAmount;
+    if (this.prestigeSystem) {
+      const multipliers = this.prestigeSystem.getPrestigeStatMultipliers();
+      const xpMultiplier = multipliers['player.xpGain'] || 1;
+      finalXpAmount = Math.floor(xpAmount * xpMultiplier);
+    }
+
+    this.xp += finalXpAmount;
 
     // Check for level up
     while (this.xp >= this.xpToNext && this.level < this.registry.config.xp.maxLevel) {

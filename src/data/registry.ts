@@ -110,13 +110,14 @@ export type CardBlueprint = {
 };
 
 export type UpgradeEffect = {
-  op: 'statAdd' | 'statMult' | 'statSet' | 'equipWeapon' | 'upgradeWeapon' | 'switchProjectile' | 'addWeaponSlot';
+  op: 'statAdd' | 'statMult' | 'statSet' | 'equipWeapon' | 'upgradeWeapon' | 'switchProjectile' | 'addWeaponSlot' | 'unlockBuilding' | 'unlockWeapon' | 'unlockProjectile';
   target?: string;
   value?: number | boolean;
   weaponKey?: string;
   projectileKey?: string;
   weaponSlot?: number; // which weapon slot to target
   level?: number;
+  buildingKey?: string;
 };
 
 export type UpgradeBlueprint = {
@@ -175,6 +176,18 @@ export type ScatterPatterns = {
   patterns: Record<string, ScatterPattern>;
 };
 
+export type PrestigeItemBlueprint = {
+  category: 'tower' | 'building' | 'weapon';
+  name: string;
+  description: string;
+  icon: string;
+  maxLevel: number;
+  basePrice: number;
+  priceScaling: number;
+  effects: Record<string, UpgradeEffect[]>;
+  requiresUnlock?: string;
+};
+
 export type Registry = {
   projectiles: Record<string, ProjectileBlueprint>;
   weapons: Record<string, WeaponBlueprint>;
@@ -184,6 +197,7 @@ export type Registry = {
   waves: WaveBlueprint[]; // For backward compatibility
   cards: Record<string, CardBlueprint>;
   upgrades: Record<string, UpgradeBlueprint>;
+  prestigeItems: Record<string, PrestigeItemBlueprint>;
   scatterPatterns: ScatterPatterns;
   config: GameConfig;
 };
@@ -196,7 +210,7 @@ export async function loadRegistry(): Promise<Registry> {
       ? '/tower_defense/public/content/'
       : './public/content/';
 
-    const [projectilesResponse, weaponsResponse, enemiesResponse, bossesResponse, wavesResponse, cardsResponse, upgradesResponse, scatterPatternsResponse, configResponse] = await Promise.all([
+    const [projectilesResponse, weaponsResponse, enemiesResponse, bossesResponse, wavesResponse, cardsResponse, upgradesResponse, prestigeResponse, scatterPatternsResponse, configResponse] = await Promise.all([
       fetch(`${basePath}projectiles.json5`),
       fetch(`${basePath}weapons.json5`),
       fetch(`${basePath}enemies.json5`),
@@ -204,15 +218,16 @@ export async function loadRegistry(): Promise<Registry> {
       fetch(`${basePath}waves.json5`),
       fetch(`${basePath}cards.json5`),
       fetch(`${basePath}upgrades.json5`),
+      fetch(`${basePath}prestige.json5`),
       fetch(`${basePath}scatterPatterns.json5`),
       fetch(`${basePath}config.json5`)
     ]);
 
-    if (!projectilesResponse.ok || !weaponsResponse.ok || !enemiesResponse.ok || !bossesResponse.ok || !wavesResponse.ok || !cardsResponse.ok || !upgradesResponse.ok || !scatterPatternsResponse.ok || !configResponse.ok) {
+    if (!projectilesResponse.ok || !weaponsResponse.ok || !enemiesResponse.ok || !bossesResponse.ok || !wavesResponse.ok || !cardsResponse.ok || !upgradesResponse.ok || !prestigeResponse.ok || !scatterPatternsResponse.ok || !configResponse.ok) {
       throw new Error('Failed to load content files');
     }
 
-    const [projectilesText, weaponsText, enemiesText, bossesText, wavesText, cardsText, upgradesText, scatterPatternsText, configText] = await Promise.all([
+    const [projectilesText, weaponsText, enemiesText, bossesText, wavesText, cardsText, upgradesText, prestigeText, scatterPatternsText, configText] = await Promise.all([
       projectilesResponse.text(),
       weaponsResponse.text(),
       enemiesResponse.text(),
@@ -220,6 +235,7 @@ export async function loadRegistry(): Promise<Registry> {
       wavesResponse.text(),
       cardsResponse.text(),
       upgradesResponse.text(),
+      prestigeResponse.text(),
       scatterPatternsResponse.text(),
       configResponse.text()
     ]);
@@ -280,6 +296,7 @@ export async function loadRegistry(): Promise<Registry> {
     const waveConfig = JSON.parse(cleanJson5(wavesText));
     const cards = JSON.parse(cleanJson5(cardsText));
     const upgrades = JSON.parse(cleanJson5(upgradesText));
+    const prestigeItems = JSON.parse(cleanJson5(prestigeText));
     const scatterPatterns = JSON.parse(cleanJson5(scatterPatternsText));
     const config = JSON.parse(cleanJson5(configText));
 
@@ -293,6 +310,7 @@ export async function loadRegistry(): Promise<Registry> {
     console.log('- Mini-boss pool:', waveConfig.miniBosses?.pool || []);
     console.log('- Card types:', Object.keys(cards));
     console.log('- Upgrade types:', Object.keys(upgrades));
+    console.log('- Prestige items:', Object.keys(prestigeItems));
     console.log('- Scatter patterns:', Object.keys(scatterPatterns.patterns));
     console.log('- XP base per level:', config.xp?.basePerLevel);
 
@@ -305,6 +323,7 @@ export async function loadRegistry(): Promise<Registry> {
       waves: waveConfig.waves || [], // For backward compatibility
       cards,
       upgrades,
+      prestigeItems,
       scatterPatterns,
       config
     };
@@ -402,6 +421,20 @@ export async function loadRegistry(): Promise<Registry> {
           color: "#ff6b6b",
           effects: {
             "1": [{ "op": "statMult", "target": "tower.damage", "value": 1.25 }]
+          }
+        }
+      },
+      prestigeItems: {
+        prestige_tower_damage: {
+          category: "tower",
+          name: "Tower Damage Boost",
+          description: "Permanently increases tower base damage",
+          icon: "tower_damage",
+          maxLevel: 10,
+          basePrice: 5,
+          priceScaling: 1.5,
+          effects: {
+            "1": [{ "op": "statMult", "target": "tower.baseDamage", "value": 1.1 }]
           }
         }
       },

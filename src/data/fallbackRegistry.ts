@@ -192,6 +192,20 @@ export const FALLBACK_REGISTRY: Registry = {
       }
     }
   },
+  prestigeItems: {
+    prestige_tower_damage: {
+      category: "tower",
+      name: "Tower Damage Boost",
+      description: "Permanently increases tower base damage",
+      icon: "tower_damage",
+      maxLevel: 10,
+      basePrice: 5,
+      priceScaling: 1.5,
+      effects: {
+        "1": [{ "op": "statMult", "target": "tower.baseDamage", "value": 1.1 }]
+      }
+    }
+  },
   scatterPatterns: {
     patterns: {
       "0": { name: "Single Shot", description: "Standard single projectile", angles: [0] },

@@ -85,7 +85,7 @@
   // Final boss configuration
   "finalBoss": {
     "spawnTime": 600, // 10 minutes
-    "warningTime": 30, // 30 second warning
+    "warningTime": 15, // 15 second warning
     "key": "ancientTitan"
   }
 }

@@ -25,6 +25,7 @@ import { BossSystem } from '../systems/BossSystem.js';
 import { CardOverlayView } from '../ui/CardOverlayView.js';
 import { GameOverScreen } from '../ui/GameOverScreen.js';
 import { MainMenuScreen } from '../ui/MainMenuScreen.js';
+import { PrestigeStoreScreen } from '../ui/PrestigeStoreScreen.js';
 import { PrestigeSystem, RunStats, GameScore } from '../systems/PrestigeSystem.js';
 import { EventBus } from './EventBus.js';
 
@@ -48,12 +49,13 @@ export class Game {
   private animationId: number = 0;
   private inRun: boolean = false;
   private gamePaused: boolean = false;
-  private gameState: 'menu' | 'playing' | 'paused' | 'game_over' = 'menu';
+  private gameState: 'menu' | 'playing' | 'paused' | 'game_over' | 'prestige_store' = 'menu';
   private runStats: RunStats;
   private bus: EventBus;
   private prestigeSystem: PrestigeSystem;
   private gameOverScreen: GameOverScreen;
   private mainMenuScreen: MainMenuScreen;
+  private prestigeStoreScreen: PrestigeStoreScreen;
 
   // Game systems
   private spawnSystem: SpawnSystem | null = null;
@@ -89,6 +91,7 @@ export class Game {
     this.prestigeSystem = new PrestigeSystem();
     this.gameOverScreen = new GameOverScreen(this.uiRenderer, canvas.width, canvas.height);
     this.mainMenuScreen = new MainMenuScreen(this.uiRenderer, canvas.width, canvas.height);
+    this.prestigeStoreScreen = new PrestigeStoreScreen(this.uiRenderer, canvas.width, canvas.height);
     this.runStats = this.initializeRunStats();
   }
 
@@ -99,6 +102,7 @@ export class Game {
     try {
       this.registry = await loadRegistry();
       this.creators = makeCreators(this.registry);
+      this.prestigeSystem.setRegistry(this.registry);
       this.initializeSystems();
       console.log('Registry loaded successfully');
     } catch (error) {
@@ -106,6 +110,7 @@ export class Game {
       console.log('Using fallback registry for development');
       this.registry = FALLBACK_REGISTRY;
       this.creators = makeCreators(this.registry);
+      this.prestigeSystem.setRegistry(this.registry);
       this.initializeSystems();
     }
 
@@ -207,13 +212,15 @@ export class Game {
 
     this.experienceSystem = new ExperienceSystem({
       bus: this.bus,
-      reg: this.registry
+      reg: this.registry,
+      prestigeSystem: this.prestigeSystem
     });
 
     this.upgradeSystem = new UpgradeSystem({
       bus: this.bus,
       reg: this.registry!,
-      creators: this.creators
+      creators: this.creators,
+      prestigeSystem: this.prestigeSystem
     });
 
     this.cardDraftSystem = new CardDraftSystem({
@@ -326,12 +333,30 @@ export class Game {
       if (menuAction === 'start') {
         this.startRun();
       } else if (menuAction === 'prestige_store') {
-        // TODO: Implement prestige store
-        console.log('Prestige store coming soon!');
+        this.showPrestigeStore();
       } else if (menuAction === 'reset') {
         if (confirm('Are you sure you want to reset all progress?')) {
           this.prestigeSystem.resetMetaData();
           this.showMainMenu(); // Refresh the menu
+        }
+      }
+      return;
+    }
+
+    // Check prestige store
+    if (this.gameState === 'prestige_store') {
+      const storeAction = this.prestigeStoreScreen.handleClick(mouseClick.x, mouseClick.y);
+      if (storeAction?.action === 'back') {
+        this.showMainMenu();
+      } else if (storeAction?.action === 'purchase' && storeAction.itemKey) {
+        const result = this.prestigeSystem.purchasePrestigeItem(storeAction.itemKey);
+        if (result.success) {
+          // Refresh the store with updated data
+          const metaData = this.prestigeSystem.getMetaData();
+          this.prestigeStoreScreen.show(metaData, this.prestigeSystem);
+          console.log(`Purchase successful: ${result.message}`);
+        } else {
+          console.log(`Purchase failed: ${result.message}`);
         }
       }
       return;
@@ -403,6 +428,8 @@ export class Game {
       this.mainMenuScreen.render();
     } else if (this.gameState === 'game_over') {
       this.gameOverScreen.render();
+    } else if (this.gameState === 'prestige_store') {
+      this.prestigeStoreScreen.render();
     }
 
     // Render card overlay (on top of everything)
@@ -481,6 +508,9 @@ export class Game {
 
     // Reset tower to base stats
     tower.reset();
+
+    // Apply prestige effects to tower stats
+    this.applyPrestigeEffectsToTower(tower);
 
     // Equip tower with a cannon weapon for Milestone 3 (AFTER reset)
     try {
@@ -590,6 +620,7 @@ export class Game {
     this.cardOverlay.resize(width, height);
     this.gameOverScreen.resize(width, height);
     this.mainMenuScreen.resize(width, height);
+    this.prestigeStoreScreen.resize(width, height);
   }
 
   /** Pause the game (stops all game system updates but keeps rendering) */
@@ -615,9 +646,44 @@ export class Game {
   showMainMenu(): void {
     this.gameState = 'menu';
     this.gameOverScreen.hide();
+    this.prestigeStoreScreen.hide();
     const metaData = this.prestigeSystem.getMetaData();
     this.mainMenuScreen.show(metaData);
     console.log('Showing main menu');
+  }
+
+  /** Show the prestige store */
+  showPrestigeStore(): void {
+    this.gameState = 'prestige_store';
+    this.mainMenuScreen.hide();
+    const metaData = this.prestigeSystem.getMetaData();
+    this.prestigeStoreScreen.show(metaData, this.prestigeSystem);
+    console.log('Showing prestige store');
+  }
+
+  /** Apply prestige effects to tower at run start */
+  private applyPrestigeEffectsToTower(tower: Tower): void {
+    const effects = this.prestigeSystem.getActivePrestigeEffects();
+
+    for (const effect of effects) {
+      if (effect.op === 'statAdd' && effect.target && typeof effect.value === 'number') {
+        // Send stat modification via event bus
+        this.bus.emit('StatModification', {
+          op: 'add',
+          target: effect.target,
+          value: effect.value
+        });
+      } else if (effect.op === 'statMult' && effect.target && typeof effect.value === 'number') {
+        // Send stat modification via event bus
+        this.bus.emit('StatModification', {
+          op: 'mult',
+          target: effect.target,
+          value: effect.value
+        });
+      }
+    }
+
+    console.log('Applied prestige effects to tower:', effects.length, 'effects');
   }
 
   /** Initialize run stats for a new run */

@@ -207,13 +207,6 @@ export class MainMenuScreen {
       }
 
       ctx.fillText(text, buttonCenterX, buttonCenterY);
-
-      // Add "Coming Soon" text for prestige store
-      if (button.action === 'prestige_store') {
-        ctx.fillStyle = '#888888';
-        ctx.font = '12px Arial';
-        ctx.fillText('(Coming Soon)', buttonCenterX, buttonCenterY + 20);
-      }
     }
   }
 
