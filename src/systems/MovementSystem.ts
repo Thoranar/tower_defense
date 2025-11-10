@@ -6,6 +6,7 @@ import { World } from '../core/World.js';
 import { Enemy } from '../gameplay/Enemy.js';
 import { Registry } from '../data/registry.js';
 import { MoveDown } from '../gameplay/behaviors/MoveDown.js';
+import { MoveToCenter } from '../gameplay/behaviors/MoveToCenter.js';
 import { EventBus } from '../core/EventBus.js';
 
 export class MovementSystem {
@@ -35,16 +36,24 @@ export class MovementSystem {
       entity.pos.x += entity.vel.x * dt;
       entity.pos.y += entity.vel.y * dt;
 
-      // Handle entities that reach the ground
-      if (entity.pos.y > 800) { // TODO: Get from viewport
-        if (entity instanceof Enemy && this.isBoss(entity)) {
-          // Boss reaching ground ends the run
-          if (this.bus) {
-            this.bus.emit('BossReachedGround', { boss: entity });
+      // Handle enemies that reach the center (tower position)
+      if (entity instanceof Enemy) {
+        const center = MoveToCenter.getCenter();
+        const dx = entity.pos.x - center.x;
+        const dy = entity.pos.y - center.y;
+        const distanceToCenter = Math.sqrt(dx * dx + dy * dy);
+
+        // Enemy reached the tower (within collision distance ~40 pixels)
+        if (distanceToCenter < 40) {
+          if (this.isBoss(entity)) {
+            // Boss reaching center ends the run
+            if (this.bus) {
+              this.bus.emit('BossReachedGround', { boss: entity });
+            }
+            console.log('Boss reached the center! Game over.');
           }
-          console.log('Boss reached the ground! Game over.');
+          entity.alive = false;
         }
-        entity.alive = false;
       }
     }
   }
@@ -55,6 +64,9 @@ export class MovementSystem {
       switch (behaviorKey) {
         case 'MoveDown':
           MoveDown.apply(enemy, dt);
+          break;
+        case 'MoveToCenter':
+          MoveToCenter.apply(enemy, dt);
           break;
         default:
           console.warn(`Unknown behavior: ${behaviorKey}`);
