@@ -22,7 +22,9 @@ export class UpgradeSystem {
     this.bus = args.bus;
     this.registry = args.reg;
     this.creators = args.creators;
-    this.prestigeSystem = args.prestigeSystem;
+    if (args.prestigeSystem !== undefined) {
+      this.prestigeSystem = args.prestigeSystem;
+    }
 
     // Get limits from config
     this.slotsMax = this.registry.config.upgrades.maxSlots;

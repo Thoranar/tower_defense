@@ -28,6 +28,7 @@ import { MainMenuScreen } from '../ui/MainMenuScreen.js';
 import { PrestigeStoreScreen } from '../ui/PrestigeStoreScreen.js';
 import { PrestigeSystem, RunStats, GameScore } from '../systems/PrestigeSystem.js';
 import { EventBus } from './EventBus.js';
+import { MoveToCenter } from '../gameplay/behaviors/MoveToCenter.js';
 
 // Main game loop; orchestrates systems and updates world
 // Manages rendering, input, and coordinates all game systems
@@ -484,11 +485,14 @@ export class Game {
     this.gameState = 'playing';
     this.runStats = this.initializeRunStats();
 
-    // Clear world and create tower at bottom center
+    // Clear world and create tower at screen center
     this.world.clear();
     const centerX = this.canvas.width / 2;
-    const groundY = this.renderer.getGroundY();
-    const tower = new Tower(centerX, groundY - 30, this.bus); // 30 pixels above ground, pass EventBus
+    const centerY = this.canvas.height / 2;
+    const tower = new Tower(centerX, centerY, this.bus); // Tower at center, pass EventBus
+
+    // Set the center position for enemy movement behavior
+    MoveToCenter.setCenter(centerX, centerY);
 
     this.world.add(tower);
 
@@ -610,6 +614,9 @@ export class Game {
   resize(width: number, height: number): void {
     this.canvas.width = width;
     this.canvas.height = height;
+
+    // Update center position for enemy movement
+    MoveToCenter.setCenter(width / 2, height / 2);
 
     // Delegate to RenderSystem
     if (this.renderSystem) {

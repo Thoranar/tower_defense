@@ -8,6 +8,7 @@ import { Registry, WaveBlueprint } from '../data/registry.js';
 import { Creators } from '../data/creators.js';
 import { Vec2 } from '../gameplay/Entity.js';
 import { MoveDown } from '../gameplay/behaviors/MoveDown.js';
+import { MoveToCenter } from '../gameplay/behaviors/MoveToCenter.js';
 import { BossSystem } from './BossSystem.js';
 
 export class SpawnSystem {
@@ -19,6 +20,7 @@ export class SpawnSystem {
 
   private spawnTimer: number = 0;
   private currentWave: WaveBlueprint | null = null;
+  private spawnRadius: number = 450; // Distance from center to spawn enemies
 
   constructor(args: { world: World; creators: Creators; reg: Registry; clock: Clock; bossSystem?: BossSystem }) {
     this.world = args.world;
@@ -85,9 +87,13 @@ export class SpawnSystem {
   }
 
   private spawnEnemyByKey(enemyKey: string): void {
-    // Spawn at random X position above screen
-    const spawnX = Math.random() * 800; // TODO: Get from viewport
-    const spawnY = -50; // Above screen
+    // Spawn at random angle around center in a circle
+    const angle = Math.random() * Math.PI * 2; // Random angle 0-360 degrees
+    const center = MoveToCenter.getCenter();
+
+    // Calculate spawn position on circle around center
+    const spawnX = center.x + Math.cos(angle) * this.spawnRadius;
+    const spawnY = center.y + Math.sin(angle) * this.spawnRadius;
     const spawnPos: Vec2 = { x: spawnX, y: spawnY };
 
     try {
@@ -96,9 +102,15 @@ export class SpawnSystem {
       // Apply HP scaling based on game progression
       this.applyHPScaling(enemy, enemyKey);
 
-      // Initialize movement behavior
+      // Initialize movement behavior - use MoveToCenter instead of MoveDown
       if (enemy.behaviorKeys.includes('MoveDown')) {
-        MoveDown.initialize(enemy, enemy.speed);
+        // Replace MoveDown with MoveToCenter
+        enemy.behaviorKeys = enemy.behaviorKeys.filter(key => key !== 'MoveDown');
+        enemy.behaviorKeys.push('MoveToCenter');
+      }
+
+      if (enemy.behaviorKeys.includes('MoveToCenter')) {
+        MoveToCenter.initialize(enemy, enemy.speed);
       }
 
       this.world.add(enemy);

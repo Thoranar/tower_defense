@@ -9,6 +9,7 @@ import { Creators } from '../data/creators.js';
 import { Vec2 } from '../gameplay/Entity.js';
 import { Enemy } from '../gameplay/Enemy.js';
 import { MoveDown } from '../gameplay/behaviors/MoveDown.js';
+import { MoveToCenter } from '../gameplay/behaviors/MoveToCenter.js';
 import { EventBus } from '../core/EventBus.js';
 
 export interface BossWarning {
@@ -115,8 +116,15 @@ export class BossSystem {
     this.eventBus.emit('bossSpawning' as any, { type: bossType, key: bossKey });
 
     try {
-      // Spawn boss at center-top of screen
-      const spawnPos: Vec2 = { x: 400, y: -100 }; // TODO: Get from viewport
+      // Spawn boss at random angle around center in a circle
+      const spawnRadius = 450; // Same as normal enemies
+      const angle = Math.random() * Math.PI * 2; // Random angle 0-360 degrees
+      const center = MoveToCenter.getCenter();
+
+      // Calculate spawn position on circle around center
+      const spawnX = center.x + Math.cos(angle) * spawnRadius;
+      const spawnY = center.y + Math.sin(angle) * spawnRadius;
+      const spawnPos: Vec2 = { x: spawnX, y: spawnY };
 
       // Get boss blueprint from bosses registry
       const bossBlueprint = this.registry.bosses[bossKey];
@@ -134,9 +142,15 @@ export class BossSystem {
       // Create boss enemy with scaled stats
       const boss = this.creators.enemyFromBlueprint(bossKey, scaledBlueprint, spawnPos);
 
-      // Initialize movement behavior
+      // Initialize movement behavior - use MoveToCenter instead of MoveDown
       if (boss.behaviorKeys.includes('MoveDown')) {
-        MoveDown.initialize(boss, boss.speed);
+        // Replace MoveDown with MoveToCenter
+        boss.behaviorKeys = boss.behaviorKeys.filter(key => key !== 'MoveDown');
+        boss.behaviorKeys.push('MoveToCenter');
+      }
+
+      if (boss.behaviorKeys.includes('MoveToCenter')) {
+        MoveToCenter.initialize(boss, boss.speed);
       }
 
       this.world.add(boss);
